@@ -11,7 +11,7 @@ import javafx.scene.text.Text;
 import javafx.util.Callback;
 
 /**
- * A Class for Rendering users images / name on the userlist.
+ * A Class for Rendering users images / name on the user list.
  */
 class CellRenderer implements Callback<ListView<User>,ListCell<User>>{
         @Override

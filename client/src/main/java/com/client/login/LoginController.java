@@ -26,14 +26,13 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 
@@ -45,13 +44,13 @@ import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
     @FXML private ArrayList<ImageView> imageViews = new ArrayList<>();//已保存的头像列表，从数据库接收或本地获取
-    @FXML private ImageView Defaultview;
-    @FXML private ImageView Sarahview;
-    @FXML private ImageView Dominicview;
-    @FXML public  TextField hostnameTextfield ;
-    @FXML private TextField portTextfield;
-    @FXML private TextField usernameTextfield;
-    @FXML private TextField passwordTextfield;
+    @FXML private ImageView DefaultView;
+    @FXML private ImageView SarahView;
+    @FXML private ImageView DominicView;
+    @FXML public  TextField hostNameTextField;
+    @FXML private TextField portTextField;
+    @FXML private TextField usernameTextField;
+    @FXML private TextField passwordTextField;
     @FXML private ChoiceBox imagePicker;
     @FXML private Label selectedPicture;
     public static ChatController con;
@@ -75,13 +74,13 @@ public class LoginController implements Initializable {
 
     public void settingButtonAction()throws IOException{
 
-        FXMLLoader fmxlLoader = new FXMLLoader(getClass().getResource("/views/SettingView.fxml"));
-        Parent window =  fmxlLoader.load();
-        settingController = fmxlLoader.getController();
+        FXMLLoader fXMlLoader = new FXMLLoader(getClass().getResource("/views/SettingView.fxml"));
+        Parent window =  fXMlLoader.load();
+        settingController = fXMlLoader.getController();
        // settingController.setPort(port);
        // settingController.setHostname(hostname);
         this.scene = new Scene(window);
-        Stage stage = (Stage) usernameTextfield.getScene().getWindow();
+        Stage stage = (Stage) usernameTextField.getScene().getWindow();
 
         stage.setResizable(false);
         stage.setScene(scene);
@@ -94,13 +93,14 @@ public class LoginController implements Initializable {
     public void setPort(int port){
         this.port = port;
     }
-
+    public void login(KeyEvent keyEvent) throws SQLException, IOException {
+        if(keyEvent.getCode()== KeyCode.ENTER)loginButtonAction();
+    }
     public void loginButtonAction() throws SQLException, IOException {
-        //String hostname = hostnameTextfield.getText();
-        //int port = Integer.parseInt(portTextfield.getText());
+
         try {
-            String username = usernameTextfield.getText();
-            String password = passwordTextfield.getText();
+            String username = usernameTextField.getText();
+            String password = passwordTextField.getText();
             /*
              check format
              account,password can't be null
@@ -129,19 +129,22 @@ public class LoginController implements Initializable {
             Statement stmt = connection.createStatement();
             ResultSet resultSet = stmt.executeQuery("select account from user_table "
                 + "where account ='"+Integer.parseInt(username)+"' and password = '"+password+"'");
-            //resultSet contains the set of the (account and password) if exists
-
+            /*
+            resultSet contains the set of the (account and password) if exists
+            对数据库返回结果进行判断
+             */
             if(resultSet.next()){
                 String picture = selectedPicture.getText();
 
-                FXMLLoader fmxlLoader = new FXMLLoader(getClass().getResource("/views/ChatView.fxml"));
-                Parent window =  fmxlLoader.load();
-                con = fmxlLoader.getController();
+                FXMLLoader fXMlLoader = new FXMLLoader(getClass().getResource("/views/ChatView.fxml"));
+                Parent window =  fXMlLoader.load();
+                con = fXMlLoader.getController();
                 Listener listener = new Listener(hostname, port, username, picture, con);
                 Thread x = new Thread(listener);
                 x.start();
                 this.scene = new Scene(window);
-            }else {
+            }
+            else {
                 ResultSet userSearch = stmt.executeQuery("select account from user_table "
                     + "where account ='"+Integer.parseInt(username)+"'");
                 //whether account exists in DataBase
@@ -161,7 +164,7 @@ public class LoginController implements Initializable {
 
     public void showScene() throws IOException {
         Platform.runLater(() -> {
-            Stage stage = (Stage) usernameTextfield.getScene().getWindow();
+            Stage stage = (Stage) usernameTextField.getScene().getWindow();
             stage.setResizable(true);
             stage.setWidth(1040);
             stage.setHeight(620);
@@ -175,7 +178,7 @@ public class LoginController implements Initializable {
             stage.setMinHeight(300);
             ResizeHelper.addResizeListener(stage);
             stage.centerOnScreen();
-            con.setUsernameLabel(usernameTextfield.getText());
+            con.setUsernameLabel(usernameTextField.getText());
             con.setImageLabel(selectedPicture.getText());
         });
     }
@@ -209,26 +212,26 @@ public class LoginController implements Initializable {
                 if (oldPicture != null) {
                     switch (oldPicture) {
                         case "Default":
-                            Defaultview.setVisible(false);
+                            DefaultView.setVisible(false);
                             break;
                         case "Dominic":
-                            Dominicview.setVisible(false);
+                            DominicView.setVisible(false);
                             break;
                         case "Sarah":
-                            Sarahview.setVisible(false);
+                            SarahView.setVisible(false);
                             break;
                     }
                 }
                 if (newPicture != null) {
                     switch (newPicture) {
                         case "Default":
-                            Defaultview.setVisible(true);
+                            DefaultView.setVisible(true);
                             break;
                         case "Dominic":
-                            Dominicview.setVisible(true);
+                            DominicView.setVisible(true);
                             break;
                         case "Sarah":
-                            Sarahview.setVisible(true);
+                            SarahView.setVisible(true);
                             break;
                     }
                 }
@@ -250,8 +253,8 @@ public class LoginController implements Initializable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        portTextfield.setText(String.valueOf(port));
-        hostnameTextfield.setText(hostname);
+        portTextField.setText(String.valueOf(port));
+        hostNameTextField.setText(hostname);
     }
 
 
@@ -261,8 +264,8 @@ public class LoginController implements Initializable {
      */
     public void generateAnimation(){
         Random rand = new Random();
-        int sizeOfSqaure = rand.nextInt(50) + 1;
-        int speedOfSqaure = rand.nextInt(10) + 5;
+        int sizeOfSquare = rand.nextInt(50) + 1;
+        int speedOfSquare = rand.nextInt(10) + 5;
         int startXPoint = rand.nextInt(420);
         int startYPoint = rand.nextInt(350);
         int direction = rand.nextInt(5) + 1;
@@ -274,35 +277,35 @@ public class LoginController implements Initializable {
         switch (direction){
             case 1 :
                 // MOVE LEFT TO RIGHT
-                r1 = new Rectangle(0,startYPoint,sizeOfSqaure,sizeOfSqaure);
-                moveXAxis = new KeyValue(r1.xProperty(), 350 -  sizeOfSqaure);
+                r1 = new Rectangle(0,startYPoint,sizeOfSquare,sizeOfSquare);
+                moveXAxis = new KeyValue(r1.xProperty(), 350 -  sizeOfSquare);
                 break;
             case 2 :
                 // MOVE TOP TO BOTTOM
-                r1 = new Rectangle(startXPoint,0,sizeOfSqaure,sizeOfSqaure);
-                moveYAxis = new KeyValue(r1.yProperty(), 420 - sizeOfSqaure);
+                r1 = new Rectangle(startXPoint,0,sizeOfSquare,sizeOfSquare);
+                moveYAxis = new KeyValue(r1.yProperty(), 420 - sizeOfSquare);
                 break;
             case 3 :
                 // MOVE LEFT TO RIGHT, TOP TO BOTTOM
-                r1 = new Rectangle(startXPoint,0,sizeOfSqaure,sizeOfSqaure);
-                moveXAxis = new KeyValue(r1.xProperty(), 350 -  sizeOfSqaure);
-                moveYAxis = new KeyValue(r1.yProperty(), 420 - sizeOfSqaure);
+                r1 = new Rectangle(startXPoint,0,sizeOfSquare,sizeOfSquare);
+                moveXAxis = new KeyValue(r1.xProperty(), 350 -  sizeOfSquare);
+                moveYAxis = new KeyValue(r1.yProperty(), 420 - sizeOfSquare);
                 break;
             case 4 :
                 // MOVE BOTTOM TO TOP
-                r1 = new Rectangle(startXPoint,420-sizeOfSqaure ,sizeOfSqaure,sizeOfSqaure);
+                r1 = new Rectangle(startXPoint,420-sizeOfSquare ,sizeOfSquare,sizeOfSquare);
                 moveYAxis = new KeyValue(r1.xProperty(), 0);
                 break;
             case 5 :
                 // MOVE RIGHT TO LEFT
-                r1 = new Rectangle(420-sizeOfSqaure,startYPoint,sizeOfSqaure,sizeOfSqaure);
+                r1 = new Rectangle(420-sizeOfSquare,startYPoint,sizeOfSquare,sizeOfSquare);
                 moveXAxis = new KeyValue(r1.xProperty(), 0);
                 break;
             case 6 :
                 //MOVE RIGHT TO LEFT, BOTTOM TO TOP
-                r1 = new Rectangle(startXPoint,0,sizeOfSqaure,sizeOfSqaure);
-                moveXAxis = new KeyValue(r1.xProperty(), 350 -  sizeOfSqaure);
-                moveYAxis = new KeyValue(r1.yProperty(), 420 - sizeOfSqaure);
+                r1 = new Rectangle(startXPoint,0,sizeOfSquare,sizeOfSquare);
+                moveXAxis = new KeyValue(r1.xProperty(), 350 -  sizeOfSquare);
+                moveYAxis = new KeyValue(r1.yProperty(), 420 - sizeOfSquare);
                 break;
 
             default:
@@ -312,7 +315,7 @@ public class LoginController implements Initializable {
         r1.setFill(Color.web("#F89406"));
         r1.setOpacity(0.1);
 
-        KeyFrame keyFrame = new KeyFrame(Duration.millis(speedOfSqaure * 1000), moveXAxis, moveYAxis);
+        KeyFrame keyFrame = new KeyFrame(Duration.millis(speedOfSquare * 1000), moveXAxis, moveYAxis);
         Timeline timeline = new Timeline();
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.setAutoReverse(true);
@@ -323,6 +326,7 @@ public class LoginController implements Initializable {
 
     /* Terminates Application */
     public void closeSystem(){
+
         Platform.exit();
         System.exit(0);
     }

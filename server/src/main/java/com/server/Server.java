@@ -5,6 +5,11 @@ import com.messages.Message;
 import com.messages.MessageType;
 import com.messages.Status;
 import com.messages.User;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +26,8 @@ public class Server {
     /* Setting up variables */
     private static final int PORT = 9001;
     private static final HashMap<String, User> names = new HashMap<>();
-    private static HashSet<ObjectOutputStream> writers = new HashSet<>();
+    private static Hashtable<String,ObjectOutputStream> writers = new Hashtable<>();
+   // private static Set<ObjectOutputStream> writers = Collections.synchronizedSet(new HashSet<>());
     private static ArrayList<User> users = new ArrayList<>();
     static Logger logger = LoggerFactory.getLogger(Server.class);
 
@@ -64,13 +70,22 @@ public class Server {
                 output = new ObjectOutputStream(os);
 
                 Message firstMessage = (Message) input.readObject();
-                checkDuplicateUsername(firstMessage);
-                writers.add(output);
-                sendNotification(firstMessage);
+                if(checkDuplicateUsername(firstMessage)){
+                    Message logoutMessage = new Message();
+                    logoutMessage.setName(firstMessage.getName());
+                    logoutMessage.setStatus(Status.LOGOUT);
+                    logoutMessage.setType(MessageType.LOGOUT);
+                    ObjectOutputStream writer = writers.get(firstMessage.getName());
+                    writer.writeObject(logoutMessage);
+                }
+            //    writers.add(output);
+                writers.put(firstMessage.getName(),output);
+                sendNewUserNotification(firstMessage);
                 addToList();
 
                 while (socket.isConnected()) {
                     Message inputmsg = (Message) input.readObject();
+                    //waiting the client message
                     if (inputmsg != null) {
                         logger.info(inputmsg.getType() + " - " + inputmsg.getName() + ": " + inputmsg.getMsg());
                         switch (inputmsg.getType()) {
@@ -112,26 +127,31 @@ public class Server {
             return msg;
         }
 
-        private synchronized void checkDuplicateUsername(Message firstMessage) throws DuplicateUsernameException {
+        private synchronized boolean checkDuplicateUsername(Message firstMessage) throws DuplicateUsernameException {
             logger.info(firstMessage.getName() + " is trying to connect");
-            if (!names.containsKey(firstMessage.getName())) {
+            boolean result = false;
+            if (names.containsKey(firstMessage.getName())) {
+                result = true;
+            }
                 this.name = firstMessage.getName();
                 user = new User();
                 user.setName(firstMessage.getName());
                 user.setStatus(Status.ONLINE);
                 user.setPicture(firstMessage.getPicture());
+              if(!result){  users.add(user);}
 
-                users.add(user);
                 names.put(name, user);
 
                 logger.info(name + " has been added to the list");
-            } else {
-                logger.error(firstMessage.getName() + " is already connected");
-                throw new DuplicateUsernameException(firstMessage.getName() + " is already connected");
-            }
+            return result;
+          //  } else {
+
+           //     logger.error(firstMessage.getName() + " is already connected");
+           //     throw new DuplicateUsernameException(firstMessage.getName() + " is already connected");
+            //}
         }
 
-        private Message sendNotification(Message firstMessage) throws IOException {
+        private Message sendNewUserNotification(Message firstMessage) throws IOException {
             Message msg = new Message();
             msg.setMsg("has joined the chat.");
             msg.setType(MessageType.NOTIFICATION);
@@ -141,6 +161,15 @@ public class Server {
             return msg;
         }
 
+        private Message sendShutdownNotification(Message firstMessage) throws IOException {
+            Message msg = new Message();
+            msg.setMsg("Sever shutdown!");
+            msg.setType(MessageType.NOTIFICATION);
+            msg.setName(firstMessage.getName());
+            msg.setPicture(firstMessage.getPicture());
+            write(msg);
+            return msg;
+        }
 
         private Message removeFromList() throws IOException {
             logger.debug("removeFromList() method Enter");
@@ -170,13 +199,33 @@ public class Server {
          * Creates and sends a Message type to the listeners.
          */
         private void write(Message msg) throws IOException {
-            for (ObjectOutputStream writer : writers) {
+            for(Map.Entry<String, ObjectOutputStream> entry: writers.entrySet()){
+             ObjectOutputStream writer = entry.getValue();
                 msg.setUserlist(names);
                 msg.setUsers(users);
                 msg.setOnlineCount(names.size());
                 writer.writeObject(msg);
                 writer.reset();
             }
+
+
+//            for (int i = 0; i < writers.size(); i++) {
+//
+//                ObjectOutputStream writer = writers.get(msg.getName());
+//                msg.setUserlist(names);
+//                msg.setUsers(users);
+//                msg.setOnlineCount(names.size());
+//                writer.writeObject(msg);
+//                writer.reset();
+//            }
+
+//            for (ObjectOutputStream writer : writers) {
+//                msg.setUserlist(names);
+//                msg.setUsers(users);
+//                msg.setOnlineCount(names.size());
+//                writer.writeObject(msg);
+//                writer.reset();
+//            }
         }
 
         /*

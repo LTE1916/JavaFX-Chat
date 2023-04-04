@@ -4,6 +4,7 @@ import com.client.login.LoginController;
 import com.messages.Message;
 import com.messages.MessageType;
 import com.messages.Status;
+import java.net.SocketException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,11 +56,10 @@ public class Listener implements Runnable{
             connect();
             logger.info("Sockets in and out ready!");
             while (socket.isConnected()) {
-                Message message = null;
-                message = (Message) input.readObject();
+                Message message =  (Message) input.readObject();
 
                 if (message != null) {
-                    logger.debug("Message recieved:" + message.getMsg() + " MessageType:" + message.getType() + "Name:" + message.getName());
+                    logger.debug("Message received:" + message.getMsg() + " MessageType:" + message.getType() + "Name:" + message.getName());
                     switch (message.getType()) {
                         case USER:
                             controller.addToChat(message);
@@ -82,9 +82,24 @@ public class Listener implements Runnable{
                         case STATUS:
                             controller.setUserList(message);
                             break;
+                        case SHUTDOWN:
+                            controller.shutdownNotification();
+                            break;
+                        case LOGOUT:
+                            controller.showInternetErrorDialog("Taken offline",
+                            "Your id login on another device",
+                            "Please change your password if it was not your operation");
+                            controller.logoutScene();
+
+                            controller.setUserList(message);
+                            break;
                     }
                 }
             }
+        } catch (SocketException e){
+            e.printStackTrace();
+            controller.shutdownNotification();
+          //  controller.logoutScene();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             controller.logoutScene();
@@ -112,7 +127,7 @@ public class Listener implements Runnable{
         Message createMessage = new Message();
         createMessage.setName(username);
         createMessage.setType(MessageType.VOICE);
-        createMessage.setStatus(Status.AWAY);
+        createMessage.setStatus(Status.RECORDING);
         createMessage.setVoiceMsg(audio);
         createMessage.setPicture(picture);
         oos.writeObject(createMessage);
@@ -123,12 +138,12 @@ public class Listener implements Runnable{
  * @param msg - The message which the user generates
  */
     public static void sendStatusUpdate(Status status) throws IOException {
-        Message createMessage = new Message();
-        createMessage.setName(username);
-        createMessage.setType(MessageType.STATUS);
-        createMessage.setStatus(status);
-        createMessage.setPicture(picture);
-        oos.writeObject(createMessage);
+        Message message = new Message();
+        message.setName(username);
+        message.setType(MessageType.STATUS);
+        message.setStatus(status);
+        message.setPicture(picture);
+        oos.writeObject(message);
         oos.flush();
     }
 

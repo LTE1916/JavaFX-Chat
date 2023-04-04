@@ -43,36 +43,37 @@
             <RowConstraints maxHeight="110.0" minHeight="9.0" prefHeight="19.999987792968795" />
          </rowConstraints>
          <children>
-            <Button id="ConnectBtn" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#loginButtonAction" prefHeight="67.0" prefWidth="121.0" stylesheets="@../styles/Login.css" text="Connect" GridPane.columnIndex="2" GridPane.rowIndex="10" />
             <Label text="Hostname: " textAlignment="CENTER" textFill="#f89406" GridPane.columnIndex="1" GridPane.rowIndex="8">
                <font>
                   <Font name="System Bold" size="22.0" />
                </font></Label>
-            <TextField fx:id="hostnameTextfield" prefWidth="188.0" text="localhost" GridPane.columnIndex="2" GridPane.rowIndex="8" />
+            <TextField fx:id="usernameTextField" prefHeight="35.0" prefWidth="392.0" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+            <PasswordField fx:id="passwordTextField" onKeyPressed="#login" prefHeight="35.0" prefWidth="392.0" GridPane.columnIndex="2" GridPane.rowIndex="6" />
+            <Button id="ConnectBtn" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#loginButtonAction" prefHeight="67.0" prefWidth="121.0" stylesheets="@../styles/Login.css" text="Connect" GridPane.columnIndex="2" GridPane.rowIndex="10" />
+            <TextField fx:id="hostNameTextField" prefWidth="188.0" text="localhost" GridPane.columnIndex="2" GridPane.rowIndex="8" />
             <Label prefHeight="30.0" prefWidth="62.0" text="Port: " textFill="#f89406" GridPane.columnIndex="1" GridPane.rowIndex="9">
                <font>
                   <Font name="System Bold" size="22.0" />
                </font></Label>
-            <TextField fx:id="portTextfield" prefHeight="13.0" prefWidth="149.0" text="9001" GridPane.columnIndex="2" GridPane.rowIndex="9" />
+            <TextField fx:id="portTextField" prefHeight="13.0" prefWidth="149.0" text="9001" GridPane.columnIndex="2" GridPane.rowIndex="9" />
             <Label text="Username: " textFill="#f89406" GridPane.columnIndex="1" GridPane.rowIndex="5">
                <font>
                   <Font name="System Bold" size="22.0" />
                </font></Label>
-            <TextField fx:id="usernameTextfield" prefHeight="35.0" prefWidth="392.0" GridPane.columnIndex="2" GridPane.rowIndex="5" />
             <Label prefHeight="22.0" prefWidth="73.0" text="Server Details" textFill="#f89406" GridPane.columnIndex="2" GridPane.rowIndex="7" />
             <StackPane GridPane.columnIndex="2" GridPane.rowIndex="3">
                <children>
-                  <ImageView fx:id="Sarahview" fitHeight="93.0" fitWidth="124.0" pickOnBounds="true" preserveRatio="true" visible="false">
+                  <ImageView fx:id="SarahView" fitHeight="93.0" fitWidth="124.0" pickOnBounds="true" preserveRatio="true" visible="false">
                      <image>
                         <Image preserveRatio="false" smooth="false" url="@../images/sarah.png" />
                      </image>
                   </ImageView>
-                  <ImageView fx:id="Dominicview" fitHeight="93.0" fitWidth="124.0" pickOnBounds="true" preserveRatio="true" visible="false">
+                  <ImageView fx:id="DominicView" fitHeight="93.0" fitWidth="124.0" pickOnBounds="true" preserveRatio="true" visible="false">
                      <image>
                         <Image preserveRatio="false" smooth="true" url="@../images/Dominic.png" />
                      </image>
                   </ImageView>
-                  <ImageView fx:id="Defaultview" fitHeight="93" fitWidth="93" pickOnBounds="true" preserveRatio="true">
+                  <ImageView fx:id="DefaultView" fitHeight="93" fitWidth="93" pickOnBounds="true" preserveRatio="true">
                      <image>
                         <Image url="@../images/default.png" />
                      </image>
@@ -98,7 +99,6 @@
                <font>
                   <Font name="System Bold" size="22.0" />
                </font></Label>
-            <PasswordField fx:id="passwordTextfield" prefHeight="35.0" prefWidth="392.0" GridPane.columnIndex="2" GridPane.rowIndex="6" />
             <Button id="MinimizedBtn" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" maxHeight="103.0" maxWidth="92.0" minWidth="21.0" mnemonicParsing="false" onAction="#minimizeWindow" prefHeight="42.0" prefWidth="56.0" stylesheets="@../styles/Login.css" GridPane.columnIndex="3" GridPane.rowIndex="1">
                <cursor>
                   <Cursor fx:constant="HAND" />

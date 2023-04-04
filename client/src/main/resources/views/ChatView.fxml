@@ -24,12 +24,12 @@
             </ScrollPane>
             <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="100.0" VBox.vgrow="NEVER">
                <children>
-                  <TextArea fx:id="messageBox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="100.0" nodeOrientation="LEFT_TO_RIGHT" onKeyPressed="#sendMethod" prefHeight="16.0" prefWidth="698.0" promptText="Enter Message..." scaleShape="false" HBox.hgrow="ALWAYS">
+                  <TextArea fx:id="messageBox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="100.0" nodeOrientation="LEFT_TO_RIGHT" onKeyPressed="#sendMethod" onKeyReleased="#controlCheck" prefHeight="16.0" prefWidth="698.0" promptText="Enter Message..." scaleShape="false" HBox.hgrow="ALWAYS">
                      <font>
                         <Font name="SansSerif Regular" size="14.0" />
                      </font>
                   </TextArea>
-                  <Button fx:id="buttonSend" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#sendButtonAction" prefHeight="43.0" prefWidth="140.0" scaleShape="false" text="Send" textAlignment="CENTER" HBox.hgrow="NEVER" />
+                  <Button fx:id="sendBtn" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#sendButtonAction" prefHeight="43.0" prefWidth="140.0" scaleShape="false" text="Send" textAlignment="CENTER" HBox.hgrow="NEVER" />
                   <Button fx:id="recordBtn" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onMousePressed="#recordVoiceMessage">
                      <graphic>
                         <ImageView fx:id="microphoneImageView" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
@@ -79,7 +79,7 @@
          <center>
             <ImageView fitHeight="79.0" fitWidth="522.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
                <image>
-                  <Image url="@../images/fxchat.png" />
+                  <Image url="@../images/sustech.png" />
                </image>
                <BorderPane.margin>
                   <Insets right="100.0" />

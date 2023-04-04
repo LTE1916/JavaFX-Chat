@@ -12,6 +12,8 @@ import com.messages.bubble.BubbleSpec;
 import com.messages.bubble.BubbledLabel;
 import com.traynotifications.animations.AnimationType;
 import com.traynotifications.notification.TrayNotification;
+import java.awt.event.KeyListener;
+import java.net.SocketException;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -53,6 +55,7 @@ public class ChatController implements Initializable {
     @FXML private ListView userList;
     @FXML private ImageView userImageView;
     @FXML private Button recordBtn;
+    @FXML private Button sendBtn;
     @FXML ListView chatPane;
     @FXML ListView statusList;
     @FXML BorderPane borderPane;
@@ -65,13 +68,38 @@ public class ChatController implements Initializable {
     private double xOffset;
     private double yOffset;
     Logger logger = LoggerFactory.getLogger(ChatController.class);
+    private java.awt.event.KeyEvent keyEvent = null;
+    private boolean controlPressed;
 
+    KeyListener keyListener = new KeyListener() {
+        @Override
+        public void keyTyped(java.awt.event.KeyEvent e) {
+
+        }
+
+        @Override
+        public void keyPressed(java.awt.event.KeyEvent e) {
+            keyEvent = e;
+            controlPressed = true;
+        }
+
+        /*
+        release pressed key
+         */
+        @Override
+        public void keyReleased(java.awt.event.KeyEvent e) {
+            if(e.getKeyCode()==keyEvent.getKeyCode()){
+                controlPressed = false;
+            }
+        }
+    };
 
     public void sendButtonAction() throws IOException {
         String msg = messageBox.getText();
         if (!messageBox.getText().isEmpty()) {
             Listener.send(msg);
             messageBox.clear();
+            //messageBox.setScrollTop(0);
         }
     }
 
@@ -172,8 +200,8 @@ public class ChatController implements Initializable {
         this.userImageView.setImage(new Image(getClass().getClassLoader().getResource("images/Dominic.png").toString()));
     }
 
-    public void setOnlineLabel(String usercount) {
-        Platform.runLater(() -> onlineCountLabel.setText(usercount));
+    public void setOnlineLabel(String userAccount) {
+        Platform.runLater(() -> onlineCountLabel.setText(userAccount));
     }
 
     public void setUserList(Message msg) {
@@ -208,11 +236,45 @@ public class ChatController implements Initializable {
 
         });
     }
+    public void shutdownNotification() {
+        Platform.runLater(() -> {
+            Image profileImg = new Image(getClass().getClassLoader().getResource("images/sustech.png").toString(),50,50,false,false);
+            TrayNotification tray = new TrayNotification();
+            tray.setTitle("Disconnected to the sever!");
+            tray.setMessage("The server shutdown, please try later");
+            tray.setRectangleFill(Paint.valueOf("#2C3E50"));
+            tray.setAnimationType(AnimationType.POPUP);
+            tray.setImage(profileImg);
+            tray.showAndDismiss(Duration.seconds(7));
+            try {
+                Media hit = new Media(getClass().getClassLoader().getResource("sounds/notification.wav").toString());
+                MediaPlayer mediaPlayer = new MediaPlayer(hit);
+                mediaPlayer.play();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
+        });
+    }
+    public void controlCheck(KeyEvent event){
+        if (event.getCode()==KeyCode.CONTROL) controlPressed=false;
+            }
     public void sendMethod(KeyEvent event) throws IOException {
-        if (event.getCode() == KeyCode.ENTER) {
-            sendButtonAction();
-        }
+//        if (event.getCode()==KeyCode.CONTROL) controlPressed=true;
+//
+//       if(!controlPressed&&event.getCode() == KeyCode.ENTER) {
+//           sendButtonAction();
+//       }
+//     messageBox.addEventFilter(KeyEvent.KEY_PRESSED,key->{
+//         if(!key.getCode().equals(KeyCode.CONTROL)&&event.getCode() == KeyCode.ENTER){
+//                 try {
+//                     sendButtonAction();
+//                 } catch (IOException e) {
+//                     throw new RuntimeException(e);
+//                 }
+//             }
+//     });
+
     }
 
     @FXML
@@ -270,30 +332,51 @@ public class ChatController implements Initializable {
             borderPane.setCursor(Cursor.DEFAULT);
         });
 
-        statusComboBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+
+        statusComboBox.getSelectionModel().selectedItemProperty().addListener(
+            (ChangeListener<String>) (observable, oldValue, newValue) -> {
                 try {
                     Listener.sendStatusUpdate(Status.valueOf(newValue.toUpperCase()));
+                } catch (SocketException e){
+                    e.printStackTrace();
+                    showInternetErrorDialog("Connect Failed!","Internet Error!","There is something wrong with the Internet connection.\n"
+                        + " Please check the Internet and try again later.");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
-        });
+            });
 
-        /* Added to prevent the enter from adding a new line to inputMessageBox */
-        messageBox.addEventFilter(KeyEvent.KEY_PRESSED, ke -> {
-            if (ke.getCode().equals(KeyCode.ENTER)) {
+        /* Added to prevent  enter from adding a new line to inputMessageBox */
+        messageBox.addEventFilter(KeyEvent.KEY_PRESSED, key -> {
+            if (key.getCode()==KeyCode.CONTROL) controlPressed=true;
+            // press CONTROL + ENTER to start a new line instead of send message
+            if (!controlPressed&& key.getCode().equals(KeyCode.ENTER)) {
                 try {
                     sendButtonAction();
+                } catch (SocketException e){
+                    e.printStackTrace();
+                    showInternetErrorDialog("Connect Failed!","Internet Error!","There is something wrong with the Internet connection.\n"
+                        + " Please check the Internet and try again later.");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                ke.consume();
+                key.consume();
+            }else if(controlPressed&& key.getCode().equals(KeyCode.ENTER)){
+                messageBox.appendText("\n");
             }
         });
 
     }
+    public void showInternetErrorDialog(String title,String message,String content) {
+        Platform.runLater(()-> {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle(title);
+            alert.setHeaderText(message);
+            alert.setContentText(content);
+            alert.showAndWait();
+        });
 
+    }
     public void setImageLabel(String selectedPicture) {
         switch (selectedPicture) {
             case "Dominic":
@@ -310,10 +393,10 @@ public class ChatController implements Initializable {
 
     public void logoutScene() {
         Platform.runLater(() -> {
-            FXMLLoader fmxlLoader = new FXMLLoader(getClass().getResource("/views/LoginView.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/LoginView.fxml"));
             Parent window = null;
             try {
-                window = (Pane) fmxlLoader.load();
+                window = (Pane) fxmlLoader.load();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -326,4 +409,6 @@ public class ChatController implements Initializable {
             stage.centerOnScreen();
         });
     }
+
+
 }
