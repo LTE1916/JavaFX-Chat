@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="613.0" prefWidth="840.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.client.login.LoginController">
+   <center>
+      <GridPane layoutY="100.0" prefHeight="588.0" prefWidth="820.0" BorderPane.alignment="CENTER">
+         <columnConstraints>
+            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="325.0" minWidth="10.0" prefWidth="78.20000610351562" />
+            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="325.0" minWidth="10.0" prefWidth="167.39998474121094" />
+            <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="593.600015258789" minWidth="10.0" prefWidth="390.0000366210937" />
+            <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="250.39992675781252" minWidth="6.800012207031273" prefWidth="66.60000000000002" />
+            <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="229.0" minWidth="3.39996337890625" prefWidth="64.20000000000005" />
+            <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="325.0" minWidth="10.0" prefWidth="68.59992675781245" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints />
+            <RowConstraints maxHeight="149.0" minHeight="10.0" prefHeight="42.99998779296875" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="149.0" minHeight="0.0" prefHeight="0.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="259.2" minHeight="10.0" prefHeight="211.99998779296874" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="149.0" minHeight="10.0" prefHeight="53.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="98.39999999999998" minHeight="10.0" prefHeight="44.799963378906284" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="100.20001831054685" minHeight="10.0" prefHeight="42.40004882812502" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="126.0" minHeight="12.0" prefHeight="23.199987792968784" />
+            <RowConstraints maxHeight="98.39998779296877" minHeight="10.0" prefHeight="49.5999694824219" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="127.0" minHeight="0.0" prefHeight="89.60003051757815" valignment="CENTER" />
+            <RowConstraints maxHeight="110.0" minHeight="10.0" prefHeight="34.4000244140625" />
+            <RowConstraints maxHeight="110.0" minHeight="9.0" prefHeight="19.999987792968795" />
+         </rowConstraints>
+         <children>
+            <Button id="ConnectBtn" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#loginButtonAction" prefHeight="67.0" prefWidth="121.0" stylesheets="@../styles/Login.css" text="Connect" GridPane.columnIndex="2" GridPane.rowIndex="10" />
+            <Label text="Hostname: " textAlignment="CENTER" textFill="#f89406" GridPane.columnIndex="1" GridPane.rowIndex="8">
+               <font>
+                  <Font name="System Bold" size="22.0" />
+               </font></Label>
+            <TextField fx:id="hostnameTextfield" prefWidth="188.0" text="localhost" GridPane.columnIndex="2" GridPane.rowIndex="8" />
+            <Label prefHeight="30.0" prefWidth="62.0" text="Port: " textFill="#f89406" GridPane.columnIndex="1" GridPane.rowIndex="9">
+               <font>
+                  <Font name="System Bold" size="22.0" />
+               </font></Label>
+            <TextField fx:id="portTextfield" prefHeight="13.0" prefWidth="149.0" text="9001" GridPane.columnIndex="2" GridPane.rowIndex="9" />
+            <Label text="Username: " textFill="#f89406" GridPane.columnIndex="1" GridPane.rowIndex="5">
+               <font>
+                  <Font name="System Bold" size="22.0" />
+               </font></Label>
+            <TextField fx:id="usernameTextfield" prefHeight="35.0" prefWidth="392.0" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+            <Label prefHeight="22.0" prefWidth="73.0" text="Server Details" textFill="#f89406" GridPane.columnIndex="2" GridPane.rowIndex="7" />
+            <StackPane GridPane.columnIndex="2" GridPane.rowIndex="3">
+               <children>
+                  <ImageView fx:id="Sarahview" fitHeight="93.0" fitWidth="124.0" pickOnBounds="true" preserveRatio="true" visible="false">
+                     <image>
+                        <Image preserveRatio="false" smooth="false" url="@../images/sarah.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fx:id="Dominicview" fitHeight="93.0" fitWidth="124.0" pickOnBounds="true" preserveRatio="true" visible="false">
+                     <image>
+                        <Image preserveRatio="false" smooth="true" url="@../images/Dominic.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fx:id="Defaultview" fitHeight="93" fitWidth="93" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/default.png" />
+                     </image>
+                  </ImageView>
+               </children>
+            </StackPane>
+            <ChoiceBox fx:id="imagePicker" prefWidth="150.0" GridPane.columnIndex="2" GridPane.rowIndex="4">
+               <items>
+                  <FXCollections fx:factory="observableArrayList">
+                     <String fx:value="Default" />
+                     <String fx:value="Dominic" />
+                     <String fx:value="Sarah" />
+                  </FXCollections>
+               </items>
+                    </ChoiceBox>
+            <Label fx:id="selectedPicture" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <Label prefHeight="86.0" prefWidth="522.0" text="SUSTech Chat" textFill="#f89406" GridPane.columnIndex="1" GridPane.rowIndex="2">
+               <font>
+                  <Font name="System Bold" size="24.0" />
+               </font>
+            </Label>
+            <Label prefHeight="30.0" prefWidth="120.0" text="Password:" textFill="#f89406" GridPane.columnIndex="1" GridPane.rowIndex="6">
+               <font>
+                  <Font name="System Bold" size="22.0" />
+               </font></Label>
+            <PasswordField fx:id="passwordTextfield" prefHeight="35.0" prefWidth="392.0" GridPane.columnIndex="2" GridPane.rowIndex="6" />
+            <Button id="MinimizedBtn" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" maxHeight="103.0" maxWidth="92.0" minWidth="21.0" mnemonicParsing="false" onAction="#minimizeWindow" prefHeight="42.0" prefWidth="56.0" stylesheets="@../styles/Login.css" GridPane.columnIndex="3" GridPane.rowIndex="1">
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
+            </Button>
+            <Button id="SettingBtn" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" maxHeight="106.0" maxWidth="68.0" minWidth="21.0" mnemonicParsing="false" onAction="#settingButtonAction" prefHeight="106.0" prefWidth="68.0" stylesheets="@../styles/Login.css" GridPane.columnIndex="4" GridPane.rowIndex="1">
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
+            </Button>
+            <ImageView fitHeight="79.0" fitWidth="83.0" pickOnBounds="true" preserveRatio="true" GridPane.rowIndex="2">
+               <image>
+                  <Image url="@../images/sustech.png" />
+               </image>
+            </ImageView>
+            <Button id="CloseBtn" fx:id="closeButton1" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutY="1000.0" maxHeight="94.0" maxWidth="94.0" minWidth="22.0" mnemonicParsing="false" onAction="#closeSystem" prefHeight="90.0" prefWidth="94.0" stylesheets="@../styles/Login.css" GridPane.columnIndex="5" GridPane.rowIndex="1">
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
+            </Button>
+         </children>
+      </GridPane>
+   </center>
+</BorderPane>
