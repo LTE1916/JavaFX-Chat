@@ -255,6 +255,8 @@ public class LoginController implements Initializable {
         }
         portTextField.setText(String.valueOf(port));
         hostNameTextField.setText(hostname);
+
+        MainLauncher.controllers.put(this.getClass().getSimpleName(),this);
     }
 
 

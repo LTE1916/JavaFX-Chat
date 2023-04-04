@@ -125,5 +125,6 @@ public class SettingController implements Initializable {
     }
     portTextfield.setText(port);
     hostnameTextfield.setText(hostname);
+    MainLauncher.controllers.put(this.getClass().getSimpleName(),this);
   }
 }

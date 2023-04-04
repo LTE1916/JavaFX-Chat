@@ -1,5 +1,7 @@
 package com.client.login;
 
+import java.util.HashMap;
+import java.util.Map;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -12,7 +14,7 @@ import javafx.stage.StageStyle;
 public class MainLauncher extends Application {
 
     private static Stage primaryStageObj;
-
+    public static Map<String,Object> controllers = new HashMap<>();
     @Override
     public void start(Stage primaryStage) throws Exception {
         primaryStageObj = primaryStage;

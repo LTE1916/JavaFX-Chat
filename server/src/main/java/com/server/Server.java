@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +60,7 @@ public class Server {
 
         public Handler(Socket socket) throws IOException {
             this.socket = socket;
+            System.out.println(socket.toString());
         }
 
         public void run() {
@@ -68,18 +70,34 @@ public class Server {
                 input = new ObjectInputStream(is);
                 os = socket.getOutputStream();
                 output = new ObjectOutputStream(os);
-
                 Message firstMessage = (Message) input.readObject();
-                if(checkDuplicateUsername(firstMessage)){
+                if(checkDuplicateUsername(firstMessage)) {
                     Message logoutMessage = new Message();
                     logoutMessage.setName(firstMessage.getName());
                     logoutMessage.setStatus(Status.LOGOUT);
                     logoutMessage.setType(MessageType.LOGOUT);
                     ObjectOutputStream writer = writers.get(firstMessage.getName());
                     writer.writeObject(logoutMessage);
+                    Thread.sleep(100);
+                    writer = output;
+//                    is = socket.getInputStream();
+//                    input = new ObjectInputStream(is);
+//                    os = socket.getOutputStream();
+//                    output = new ObjectOutputStream(os);
+//                    firstMessage = (Message) input.readObject();
                 }
+                    this.name = firstMessage.getName();
+                    user = new User();
+                    user.setName(firstMessage.getName());
+                    user.setStatus(Status.ONLINE);
+                    user.setPicture(firstMessage.getPicture());
+                    users.add(user);
+                    names.put(name, user);
+                    writers.put(firstMessage.getName(),output);
+                    logger.info(name + " has been added to the list");
+
             //    writers.add(output);
-                writers.put(firstMessage.getName(),output);
+
                 sendNewUserNotification(firstMessage);
                 addToList();
 
@@ -101,11 +119,16 @@ public class Server {
                             case STATUS:
                                 changeStatus(inputmsg);
                                 break;
+                            case DISCONNECTED:
+                                closeConnections();
+                                socket.close();
+                                break;
                         }
                     }
                 }
             } catch (SocketException socketException) {
                 logger.error("Socket Exception for user " + name);
+
             } catch (DuplicateUsernameException duplicateException){
                 logger.error("Duplicate Username : " + name);
             } catch (Exception e){
@@ -129,21 +152,8 @@ public class Server {
 
         private synchronized boolean checkDuplicateUsername(Message firstMessage) throws DuplicateUsernameException {
             logger.info(firstMessage.getName() + " is trying to connect");
-            boolean result = false;
-            if (names.containsKey(firstMessage.getName())) {
-                result = true;
-            }
-                this.name = firstMessage.getName();
-                user = new User();
-                user.setName(firstMessage.getName());
-                user.setStatus(Status.ONLINE);
-                user.setPicture(firstMessage.getPicture());
-              if(!result){  users.add(user);}
+            return names.containsKey(firstMessage.getName());
 
-                names.put(name, user);
-
-                logger.info(name + " has been added to the list");
-            return result;
           //  } else {
 
            //     logger.error(firstMessage.getName() + " is already connected");
@@ -243,7 +253,7 @@ public class Server {
                 logger.info("User object: " + user + " has been removed!");
             }
             if (output != null){
-                writers.remove(output);
+                writers.remove(name);
                 logger.info("Writer object: " + user + " has been removed!");
             }
             if (is != null){

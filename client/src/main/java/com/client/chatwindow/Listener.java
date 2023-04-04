@@ -5,6 +5,7 @@ import com.messages.Message;
 import com.messages.MessageType;
 import com.messages.Status;
 import java.net.SocketException;
+import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,10 +63,10 @@ public class Listener implements Runnable{
                     logger.debug("Message received:" + message.getMsg() + " MessageType:" + message.getType() + "Name:" + message.getName());
                     switch (message.getType()) {
                         case USER:
-                            controller.addToChat(message);
+                            controller.addToChat(message,true);
                             break;
                         case VOICE:
-                            controller.addToChat(message);
+                            controller.addToChat(message,true);
                             break;
                         case NOTIFICATION:
                             controller.newUserNotification(message);
@@ -89,9 +90,10 @@ public class Listener implements Runnable{
                             controller.showInternetErrorDialog("Taken offline",
                             "Your id login on another device",
                             "Please change your password if it was not your operation");
+                            disconnect();
                             controller.logoutScene();
 
-                            controller.setUserList(message);
+                            //controller.setUserList(message);
                             break;
                     }
                 }
@@ -100,7 +102,7 @@ public class Listener implements Runnable{
             e.printStackTrace();
             controller.shutdownNotification();
           //  controller.logoutScene();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException | InterruptedException e) {
             e.printStackTrace();
             controller.logoutScene();
         }
@@ -109,14 +111,18 @@ public class Listener implements Runnable{
     /* This method is used for sending a normal Message
      * @param msg - The message which the user generates
      */
-    public static void send(String msg) throws IOException {
-        Message createMessage = new Message();
-        createMessage.setName(username);
-        createMessage.setType(MessageType.USER);
-        createMessage.setStatus(Status.AWAY);
-        createMessage.setMsg(msg);
-        createMessage.setPicture(picture);
-        oos.writeObject(createMessage);
+    public static void send(String msg,int messageID,int conservationType, int conservationID , Date date) throws IOException {
+        Message newMessage = new Message();
+        newMessage.setName(username);
+        newMessage.setType(MessageType.USER);//意思是来自用户发送的文字消息
+       // newMessage.setStatus(Status.AWAY);
+        newMessage.setMsg(msg);
+        newMessage.setPicture(picture);
+        newMessage.setID(messageID);
+        newMessage.setConversationType(conservationType);//1=私聊，2=群聊
+        newMessage.setConversationID(conservationID);
+        newMessage.setDate(date);
+        oos.writeObject(newMessage);
         oos.flush();
     }
 
@@ -144,6 +150,16 @@ public class Listener implements Runnable{
         message.setStatus(status);
         message.setPicture(picture);
         oos.writeObject(message);
+        oos.flush();
+    }
+    public static void disconnect() throws IOException {
+        Message createMessage = new Message();
+        createMessage.setName(username);
+        createMessage.setType(MessageType.DISCONNECTED);
+        createMessage.setStatus(Status.LOGOUT);
+        //createMessage.setMsg(msg);
+        createMessage.setPicture(picture);
+        oos.writeObject(createMessage);
         oos.flush();
     }
 

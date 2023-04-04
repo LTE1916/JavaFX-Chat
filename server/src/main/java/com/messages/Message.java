@@ -2,23 +2,36 @@ package com.messages;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 public class Message implements Serializable {
 
     private String name;
     private MessageType type;
+    private int conversationType;
+    private Date snedDate;
+
+    public void setConversationType(int type){this.conversationType = type;}
+    public int getConversationType(){return conversationType;}
+    private int conversationID;
+    public void setConversationID(int conversationID){this.conversationID = conversationID;}
+    public int getConversationID(){return conversationID;}
+    private int id;
+    public void setID(int id){this.id = id;}
+    public int getID(){return id;}
     private String msg;
     private int count;
     private ArrayList<User> list;
     private ArrayList<User> users;
 
     private Status status;
-    private byte[] voiceMsg;
 
     public byte[] getVoiceMsg() {
         return voiceMsg;
     }
+
+    private byte[] voiceMsg;
 
     public String getPicture() {
         return picture;
@@ -94,4 +107,10 @@ public class Message implements Serializable {
     public void setVoiceMsg(byte[] voiceMsg) {
         this.voiceMsg = voiceMsg;
     }
+
+    public void setDate(Date date) {
+        snedDate = date;
+  }
+
+    public Date getSendDate(){return snedDate;}
 }
