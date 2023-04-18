@@ -67,7 +67,7 @@
                <children>
                   <TabPane fx:id="leftPane" prefHeight="540.0" prefWidth="292.0" side="BOTTOM" tabClosingPolicy="UNAVAILABLE">
                     <tabs>
-                      <Tab text="recent message">
+                      <Tab fx:id="recentMessageTab" text="recent message"  onSelectionChanged="#recentMessageClicked" >
                         <content>
                           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                  <children>
@@ -83,7 +83,7 @@
                                  </children></AnchorPane>
                           </content>
                         </Tab>
-                      <Tab fx:id="onlineUser" closable="false" text="online users">
+                      <Tab fx:id="onlineUserTab" closable="false" text="online users">
                         <content>
                           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                  <children>

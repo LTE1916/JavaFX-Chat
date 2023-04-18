@@ -118,7 +118,7 @@ public class Message implements Serializable {
         this.voiceMsg = voiceMsg;
     }
 
-    public void setDate(Date date) {
+    public void setSnedDateDate(Date date) {
         snedDate = date;
   }
 

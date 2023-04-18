@@ -37,7 +37,7 @@ class MessageRenderer implements Callback<ListView<Conservation>,ListCell<Conser
 
           }
             ImageView picture = new ImageView();
-            Image image = new Image(getClass().getClassLoader().getResource( conservation.getPicture()).toString(),50,50,true,true);
+            Image image = new Image(getClass().getClassLoader().getResource("images/"+ conservation.getPicture().toLowerCase()+".png").toString(),50,50,true,true);
             picture.setImage(image);
 
             hBox.getChildren().addAll(name,picture);

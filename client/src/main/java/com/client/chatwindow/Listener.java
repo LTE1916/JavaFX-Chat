@@ -121,7 +121,7 @@ public class Listener implements Runnable{
         newMessage.setID(messageID);
         newMessage.setConversationType(conservationType);//1=私聊，2=群聊
         newMessage.setConversationID(conservationID);
-        newMessage.setDate(date);
+        newMessage.setSnedDateDate(date);
         newMessage.setTarget(targetID);
         oos.writeObject(newMessage);
         oos.flush();
