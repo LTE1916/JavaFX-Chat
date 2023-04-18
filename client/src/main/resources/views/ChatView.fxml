@@ -65,9 +65,9 @@
          <children>
             <AnchorPane prefHeight="511.0" prefWidth="292.0">
                <children>
-                  <TabPane prefHeight="540.0" prefWidth="292.0" side="BOTTOM" tabClosingPolicy="UNAVAILABLE">
+                  <TabPane fx:id="leftPane" prefHeight="540.0" prefWidth="292.0" side="BOTTOM" tabClosingPolicy="UNAVAILABLE">
                     <tabs>
-                      <Tab text="message">
+                      <Tab text="recent message">
                         <content>
                           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                  <children>
@@ -83,7 +83,7 @@
                                  </children></AnchorPane>
                           </content>
                         </Tab>
-                      <Tab closable="false" text="online">
+                      <Tab fx:id="onlineUser" closable="false" text="online users">
                         <content>
                           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                  <children>

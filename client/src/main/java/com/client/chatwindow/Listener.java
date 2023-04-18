@@ -111,7 +111,7 @@ public class Listener implements Runnable{
     /* This method is used for sending a normal Message
      * @param msg - The message which the user generates
      */
-    public static void send(String msg,int messageID,int conservationType, int conservationID , Date date) throws IOException {
+    public static void send(String msg,String targetID,int messageID,int conservationType, int conservationID , Date date) throws IOException {
         Message newMessage = new Message();
         newMessage.setName(username);
         newMessage.setType(MessageType.USER);//意思是来自用户发送的文字消息
@@ -122,6 +122,7 @@ public class Listener implements Runnable{
         newMessage.setConversationType(conservationType);//1=私聊，2=群聊
         newMessage.setConversationID(conservationID);
         newMessage.setDate(date);
+        newMessage.setTarget(targetID);
         oos.writeObject(newMessage);
         oos.flush();
     }

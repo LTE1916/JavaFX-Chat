@@ -71,7 +71,7 @@ public class Server {
                 os = socket.getOutputStream();
                 output = new ObjectOutputStream(os);
                 Message firstMessage = (Message) input.readObject();
-                if(checkDuplicateUsername(firstMessage)) {
+                if(checkDuplicateUsername(firstMessage)) {//异地登陆挤下线
                     Message logoutMessage = new Message();
                     logoutMessage.setName(firstMessage.getName());
                     logoutMessage.setStatus(Status.LOGOUT);
@@ -86,6 +86,7 @@ public class Server {
 //                    output = new ObjectOutputStream(os);
 //                    firstMessage = (Message) input.readObject();
                 }
+                //新用户上线
                     this.name = firstMessage.getName();
                     user = new User();
                     user.setName(firstMessage.getName());
@@ -108,7 +109,11 @@ public class Server {
                         logger.info(inputmsg.getType() + " - " + inputmsg.getName() + ": " + inputmsg.getMsg());
                         switch (inputmsg.getType()) {
                             case USER:
-                                write(inputmsg);
+                                if(inputmsg.getConversationType()==1){
+                               writeSingleConversation(inputmsg);
+                                }else {
+                                    write(inputmsg);
+                                }
                                 break;
                             case VOICE:
                                 write(inputmsg);
@@ -205,10 +210,23 @@ public class Server {
             return msg;
         }
 
-        /*
-         * Creates and sends a Message type to the listeners.
-         */
+        private void writeSingleConversation(Message message)throws IOException{
+            //服务器给私聊对象发消息，通知发送方客户端已发送，通知接收方客户端有新消息
+            ObjectOutputStream sender = writers.get(message.getName());
+            ObjectOutputStream target = writers.get(message.getTarget());
+            message.setUserlist(names);
+            message.setUsers(users);
+            message.setOnlineCount(names.size());
+            sender.writeObject(message);
+            target.writeObject(message);
+            sender.reset();
+            target.reset();
+        }
+
+
         private void write(Message msg) throws IOException {
+            //给全体在线用户发一条消息，（某人上线，服务器掉线......）
+
             for(Map.Entry<String, ObjectOutputStream> entry: writers.entrySet()){
              ObjectOutputStream writer = entry.getValue();
                 msg.setUserlist(names);

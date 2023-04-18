@@ -1,5 +1,8 @@
 package com.client.chatwindow;
 
+import static com.client.login.LoginController.con;
+
+import com.messages.Conservation;
 import com.messages.Message;
 import com.messages.User;
 import javafx.geometry.Pos;
@@ -14,21 +17,38 @@ import javafx.util.Callback;
 chatPage 渲染器
 
  */
-class MessageRenderer implements Callback<ListView<Message>,ListCell<Message>> {
+class MessageRenderer implements Callback<ListView<Conservation>,ListCell<Conservation>> {
   @Override
-  public ListCell<Message> call(ListView<Message> p) {
+  public ListCell<Conservation> call(ListView<Conservation> p) {
 
-    ListCell<Message> cell = new ListCell<Message>(){
+    ListCell<Conservation> cell = new ListCell<Conservation>(){
       @Override
-      protected void updateItem(Message item, boolean empty) {
-        super.updateItem(item, empty);
+      protected void updateItem(Conservation conservation, boolean bln) {
+        super.updateItem(conservation, bln);
         setGraphic(null);
         setText(null);
-        if(item!=null){
+        if(conservation!=null){
           HBox hBox = new HBox();
+          Text name;
+          if(conservation.getType()==1){
+            name = new Text(String.valueOf(conservation.getTarget()));   //私聊
+          }else  {
+            name = new Text(conservation.getName());//2人以上群聊
+
+          }
+            ImageView picture = new ImageView();
+            Image image = new Image(getClass().getClassLoader().getResource( conservation.getPicture()).toString(),50,50,true,true);
+            picture.setImage(image);
+
+            hBox.getChildren().addAll(name,picture);
+            hBox.setAlignment(Pos.CENTER_LEFT);
+            setGraphic(hBox);
+
+          }
         }
-      }
-    };
-  return null;
+      };
+
+
+  return cell;
   }
 }

@@ -7,7 +7,17 @@ import java.util.HashMap;
 
 public class Message implements Serializable {
 
-    private String name;
+    private String name;//senderID或者是SEVER
+    private String target;//targetID
+
+    public void setTarget(String target) {
+        this.target = target;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
     private MessageType type;
     private int conversationType;
     private Date snedDate;
