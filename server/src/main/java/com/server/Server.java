@@ -5,6 +5,12 @@ import com.messages.Message;
 import com.messages.MessageType;
 import com.messages.Status;
 import com.messages.User;
+import com.sun.xml.internal.ws.api.model.MEP;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -32,6 +38,11 @@ public class Server {
     private static ArrayList<User> users = new ArrayList<>();
     static Logger logger = LoggerFactory.getLogger(Server.class);
 
+
+
+    public Server() throws SQLException {
+    }
+
     public static void main(String[] args) throws Exception {
         logger.info("The chat server is running.");
         ServerSocket listener = new ServerSocket(PORT);
@@ -57,8 +68,12 @@ public class Server {
         private OutputStream os;
         private ObjectOutputStream output;
         private InputStream is;
+        private final Connection connection = DriverManager.getConnection
+            ("jdbc:postgresql://localhost:5432/java_chat_user","test","123456789");
+        //connect to DATA BASE
+        private Statement stmt = connection.createStatement();
 
-        public Handler(Socket socket) throws IOException {
+        public Handler(Socket socket) throws IOException, SQLException {
             this.socket = socket;
             System.out.println(socket.toString());
         }
@@ -112,7 +127,7 @@ public class Server {
                                 if(inputmsg.getConversationType()==1){
                                writeSingleConversation(inputmsg);
                                 }else {
-                                    write(inputmsg);
+                                    writeGroup(inputmsg);
                                 }
                                 break;
                             case VOICE:
@@ -218,11 +233,38 @@ public class Server {
             message.setUsers(users);
             message.setOnlineCount(names.size());
             sender.writeObject(message);
-            target.writeObject(message);
             sender.reset();
-            target.reset();
+            if(target!=null) {
+                target.writeObject(message);
+                target.reset();
+            }
         }
 
+        private void writeGroup(Message msg) throws IOException, SQLException {
+            ObjectOutputStream sender = writers.get(msg.getName());
+
+            msg.setUserlist(names);
+            msg.setUsers(users);
+            msg.setOnlineCount(names.size());
+            sender.writeObject(msg);
+            sender.reset();
+            ResultSet resultSet = stmt.executeQuery("select contain_users from conservation where id = '"+msg.getConversationID()+"' ");
+            if(resultSet.next()){
+                String containUsers = resultSet.getString("contain_users");
+                String []users = containUsers.split(",");
+                for (int i = 0; i <users.length ; i++) {
+                    if(!users[i].equals(msg.getName())){
+                        ObjectOutputStream receiver = writers.get(users[i]);
+                        if(receiver!=null){
+                            receiver.writeObject(msg);
+                            receiver.reset();
+                        }
+
+                    }
+                }
+
+            }
+        }
 
         private void write(Message msg) throws IOException {
             //给全体在线用户发一条消息，（某人上线，服务器掉线......）

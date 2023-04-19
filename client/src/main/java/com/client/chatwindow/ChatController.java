@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -46,6 +47,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -73,6 +75,7 @@ public class ChatController implements Initializable {
     @FXML private Label onlineCountLabel;
     @FXML private ListView userList;
     @FXML private ImageView userImageView;
+    @FXML private ImageView MultiConservation;
     @FXML private Button recordBtn;
     @FXML private Button sendBtn;
     @FXML ListView chatPage;
@@ -99,12 +102,14 @@ public class ChatController implements Initializable {
     private int currentUserID ;
 
     private int targetID=0;
+    private ArrayList<User> users = new ArrayList<>();
+
     private ArrayList<Message> currentMessages = new ArrayList<>();
     private Map<Integer, ArrayList<Message>> messageListMap = new HashMap<>();//map conservation ID to messageHistory
     private Map<Integer,String> conversationTypeMap = new HashMap<>();
-
+    private DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private String picture;
-
+   // private Map<String,User>userMap = new HashMap<>();
     private Map<Integer,Conservation> conservationMap = new HashMap<>();
     private ObservableList<Conservation> conservationObservableList = FXCollections.observableList(new ArrayList<>());
     Image microphoneActiveImage = new Image(getClass().getClassLoader().getResource("images/microphone-active.png").toString());
@@ -150,13 +155,12 @@ public class ChatController implements Initializable {
         String msg = messageBox.getText();
          currentUserID = Integer.parseInt(usernameLabel.getText());
         if (!messageBox.getText().isEmpty()) {
+            Date sendDate = Date.from(Instant.now());
+            String sendTime = df.format(Date.from(Instant.now()));
+            String date = sendTime.substring(0,10);
+            String time = sendTime.substring(11);
             if(currentConservationType==1) {
                 //私聊时按下发送按钮
-                Date sendDate = Date.from(Instant.now());
-                DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String sendTime = df.format(Date.from(Instant.now()));
-                String date = sendTime.substring(0,10);
-                String time = sendTime.substring(11);
                  stmt.execute("insert into message_history (text,date,time,type,fromid,target , belong) "
                     + "values ('"+ messageBox.getText()+"','"+date+"','"+time+"',1,'"
                      +currentUserID+"','"+targetID+"','"+currentConservationID+"')");
@@ -165,11 +169,9 @@ public class ChatController implements Initializable {
                 //将发送的信息先传到数据库，再从数据库获取该条信息的id
                 if (resultSet.next()) {
                     int currentMessageID = resultSet.getInt("id");
-
                     Listener.send(msg, String.valueOf(targetID),currentMessageID, 1, currentConservationID ,sendDate);
                     messageBox.clear();
                     //send
-
                     //update conservation in DB
                     stmt.execute("update conservation set contain_messages = concat(contain_messages,',"+currentMessageID +"') where id = '"+currentConservationID+"'");
                     stmt.execute("update conservation set last_talk_date = current_date where id ='"+currentConservationID+"'");
@@ -179,8 +181,19 @@ public class ChatController implements Initializable {
                 }
             }else {
                 //type =2 对应群聊时发送
-
-
+                stmt.execute("insert into message_history (text,date,time,type,fromid,target , belong) "
+                    + "values ('"+ messageBox.getText()+"','"+date+"','"+time+"',2,'"
+                    +currentUserID+"','"+currentConservationID+"','"+currentConservationID+"')");
+                ResultSet resultSet = stmt.executeQuery("select id,date,time from message_history"
+                    + " where (date = '"+date+"' and time='"+time+"' and fromid = '"+currentUserID+"' and belong = "+currentConservationID+" and type =2)") ;
+                if(resultSet.next()){
+                    int currentMessageID = resultSet.getInt("id");
+                    Listener.send(msg,String.valueOf(currentConservationID),currentMessageID,2,currentConservationID,sendDate);
+                    messageBox.clear();
+                    stmt.execute("update conservation set contain_messages = concat(contain_messages,',"+currentMessageID +"') where id = '"+currentConservationID+"'");
+                    stmt.execute("update conservation set last_talk_date = current_date where id ='"+currentConservationID+"'");
+                    stmt.execute("update conservation set last_talk_time = current_time where id ='"+currentConservationID+"'");
+                }
             }
             //messageBox.setScrollTop(0);
         }
@@ -295,7 +308,8 @@ public class ChatController implements Initializable {
                 t2.start();
                 System.out.println("t2 start");
 
-            } else if(msg.getName().equals(String.valueOf(targetID))){
+            } else if((msg.getName().equals(String.valueOf(targetID))&&currentConservationType==1)||
+                (msg.getConversationType()==2&&msg.getConversationID()==currentConservationID&&currentConservationType==2) ){
                 if (isNew) currentMessages.add(msg);
                 Thread t1 = new Thread(othersMessages);
                 t1.setDaemon(true);
@@ -305,7 +319,7 @@ public class ChatController implements Initializable {
                 threadFinished = false;
                 t1.start();
                 System.out.println("t1 start");
-            }else {
+            }else  {
                 //有新消息但是不是当前对话的新消息，弹出提醒
                 if(isNew){
                     newMessageNotification(msg);
@@ -344,7 +358,7 @@ public class ChatController implements Initializable {
     }
 
     public void setImageLabel() throws IOException {
-        this.userImageView.setImage(new Image(getClass().getClassLoader().getResource("images/Dominic.png").toString()));
+        this.userImageView.setImage(new Image(getClass().getClassLoader().getResource("images/default.png").toString()));
     }
 
     public void setOnlineLabel(String userAccount) {
@@ -354,6 +368,8 @@ public class ChatController implements Initializable {
     public void setUserList(Message msg) {
         logger.info("setUserList() method Enter");
         Platform.runLater(() -> {
+            users.clear();
+            users.addAll(msg.getUserlist());
             ObservableList<User> users = FXCollections.observableList(msg.getUsers());
             userList.setItems(users);
             userList.setCellFactory(new CellRenderer());
@@ -364,6 +380,9 @@ public class ChatController implements Initializable {
 
     public void newMessageNotification(Message msg){
         Platform.runLater(() -> {
+
+            leftPane.getSelectionModel().select(recentMessageTab);
+
             Image profileImg = new Image(getClass().getClassLoader().getResource("images/" + msg.getPicture().toLowerCase() +".png").toString(),50,50,false,false);
             TrayNotification tray = new TrayNotification();
             tray.setTitle("New Message");
@@ -622,30 +641,110 @@ public class ChatController implements Initializable {
         logger.info("addToRecentConservation() method Exit");
     }
 
-    public void createSingleConversation(MouseEvent mouseEvent) throws SQLException {
+    public void changeToConservation(MouseEvent mouseEvent)
+        throws SQLException, InterruptedException, ParseException {
+        currentUserID = Integer.parseInt(usernameLabel.getText());
+        Conservation targetConservation = (Conservation) messageList.getSelectionModel()
+            .getSelectedItem();
+        currentConservationType = targetConservation.getType();
+        currentConservationID = targetConservation.getID();
+        if (currentConservationType == 1) {
+            //在recent message中点击私聊，切换到指定的私聊
+            ArrayList<String> containUsers = targetConservation.getContainUsers();
+            User targetUser = new User();
+            if (containUsers.get(0).equals(usernameLabel.getText())) {
+                targetUser.setName(containUsers.get(1));
+            } else {
+                targetUser.setName(containUsers.get(0));
+            }
+            targetUser.setPicture("default");
+            changeToSingleConservation(targetUser);
+        } else {
+            //切换到群聊
+            ArrayList<String> containUsers = targetConservation.getContainUsers();
+
+            ResultSet r1 = stmt.executeQuery(
+                "select * from conservation where id = '" + currentConservationID + "'");
+            if (r1.next()) {
+                //该群聊存在,从数据库获取
+                currentConservationID = r1.getInt("id");
+
+                    String containMessages = r1.getString("contain_messages");
+                    if(containMessages!=null){
+                    String[] messages = containMessages.split(",");//存的是message的ID
+                    currentMessages.clear();
+                    chatPage.getItems().clear();
+                    for (String s : messages) {
+                        if (!s.equals("")) {
+                            ResultSet resultSet = stmt.executeQuery(
+                                "select * from message_history where id =" + Integer.parseInt(s)
+                                    + " ");
+                            if (resultSet.next()) {
+                                Message message = new Message();
+                                message.setID(resultSet.getInt("id"));
+                                message.setMsg(resultSet.getString("text"));
+                                message.setType(MessageType.USER);
+                                message.setConversationID(resultSet.getInt("belong"));
+                                message.setName(resultSet.getString("fromid"));
+                                message.setTarget(resultSet.getString("target"));
+                                message.setConversationType(2);
+
+                                String date = resultSet.getString("date");
+                                String time = resultSet.getString("time");
+                                message.setSnedDateDate(df.parse(date + " " + time));
+                                ResultSet r2 = stmt.executeQuery(
+                                    "select picture from user_table where account ='"
+                                        + message.getName() + "'  ");
+                                if (r2.next())
+                                    message.setPicture(r2.getString("picture"));
+                                addToChat(message, false);
+                            }
+                        }
+                    }
+                }else {
+                    currentMessages.clear();
+                    chatPage.getItems().clear();
+                }
+            }
+        }
+    }
+    public void startSingleConversation(MouseEvent mouseEvent) {
         //该方法仅限于私聊模式双击对方
         if(mouseEvent.getClickCount()==2) {
-            currentUserID = Integer.valueOf(usernameLabel.getText());
+            currentUserID = Integer.parseInt(usernameLabel.getText());
             currentConservationType = 1;//双击可以私聊，进入私聊模式，然后判断会话是否已存在
             User targetUser = (User) userList.getSelectionModel().getSelectedItem();
             targetID = Integer.parseInt(targetUser.getName());
-            if(!targetUser.getName().equals(usernameLabel.getText())) {
-                //type =1  single conservation
-                String containUsers = usernameLabel.getText()+","+targetUser.getName();
-                try {
-                    ResultSet r1 =  stmt.executeQuery("select id,contain_messages from conservation where contain_users like '%"+usernameLabel.getText()+"%' "
-                        + "and contain_users like '%"+targetID+"%' and type=1 ");
-                    if(!r1.next()) {
-                        //该私聊在数据库中不存在，create a new conversation
+            changeToSingleConservation(targetUser);
 
-                        stmt.execute("insert into conservation (type,contain_users,picture,last_talk_date,last_talk_time)"
-                                + "values (1,'"+ containUsers +"','"+targetUser.getPicture()+"',current_date,current_time);");
-                        ResultSet resultSet = stmt.executeQuery("select id from conservation where contain_users like '%"+usernameLabel.getText()+"%' "
-                            + "and contain_users like '%"+targetID+"%' and type=1 ");
-                        messageListMap.put(currentConservationID,currentMessages);//把当前的chatPage里的聊天记录存起来
+        }
+    }
+    public void changeToSingleConservation(User targetUser){
+        if(!targetUser.getName().equals(usernameLabel.getText())) {
+            //type =1  single conservation
+            targetID = Integer.parseInt(targetUser.getName());
+            String containUsers = usernameLabel.getText() + "," + targetUser.getName();
+            try {
+                ResultSet r1 = stmt.executeQuery(
+                    "select id,contain_messages from conservation where contain_users like '%"
+                        + usernameLabel.getText() + "%' "
+                        + "and contain_users like '%" + targetID + "%' and type=1 ");
+                if (!r1.next()) {
+                    //该私聊在数据库中不存在，create a new conversation
 
-                        if(resultSet.next()){
-                            currentConservationID = resultSet.getInt("id");
+                    stmt.execute(
+                        "insert into conservation (type,contain_users,picture,last_talk_date,last_talk_time)"
+                            + "values (1,'" + containUsers + "','" + targetUser.getPicture()
+                            + "',current_date,current_time);");
+                    ResultSet resultSet = stmt.executeQuery(
+                        "select id from conservation where contain_users like '%"
+                            + usernameLabel.getText() + "%' "
+                            + "and contain_users like '%" + targetID + "%' and type=1 ");
+                    messageListMap.put(currentConservationID,
+                        currentMessages);//把当前的chatPage里的聊天记录存起来
+
+                    if (resultSet.next()) {
+                        currentConservationID = resultSet.getInt("id");
                         chatPage.getItems().clear();
                         Message createConservationMessage = new Message();
                         createConservationMessage.setConversationID(currentConservationID);
@@ -656,18 +755,21 @@ public class ChatController implements Initializable {
                         createConservationMessage.setMsg("create a conservation local");
                         createConservationMessage.setSnedDateDate(Date.from(Instant.now()));
 
-                       // createConservationMessage.setType();
-                        addToRecentConservation(createConservationMessage);}
-                    }else {
-                        //chatPage change to the corresponding conservation
-                        currentConservationID = r1.getInt("id");
-                        //从数据库获取聊天记录
-                        String containMessages = r1.getString("contain_messages");
-                        String[]messages = containMessages.split(",");//存的是message的ID
+                        // createConservationMessage.setType();
+                        addToRecentConservation(createConservationMessage);
+                    }
+                } else {
+                    //chatPage change to the corresponding conservation
+                    currentConservationID = r1.getInt("id");
+                    //从数据库获取聊天记录
+                    String containMessages = r1.getString("contain_messages");
+                    if(containMessages!=null) {
+
+                        String[] messages = containMessages.split(",");//存的是message的ID
                         currentMessages.clear();
                         chatPage.getItems().clear();
                         for (String s : messages) {
-                            if(!s.equals("")) {
+                            if (!s.equals("")) {
                                 ResultSet resultSet = stmt.executeQuery(
                                     "select * from message_history where id =" + Integer.parseInt(s)
                                         + " ");
@@ -687,14 +789,16 @@ public class ChatController implements Initializable {
                                     }
                                     String date = resultSet.getString("date");
                                     String time = resultSet.getString("time");
-                                    DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                                     message.setSnedDateDate(df.parse(date + " " + time));
                                     addToChat(message, false);
                                 }
                             }
                         }
-
-                        //从本地获取聊天记录
+                    }else {
+                        currentMessages.clear();
+                        chatPage.getItems().clear();
+                    }
+                    //从本地获取聊天记录
 //                        messageListMap.put(currentConservationID,currentMessages);
 //                        currentConservationID = r1.getInt("id");
 //                        currentMessages= messageListMap.get(currentConservationID);//聊天记录传过来
@@ -703,23 +807,16 @@ public class ChatController implements Initializable {
 //                        for (Message message : currentMessages) {
 //                            addToChat(message, false);
 //                        }
-                        //then,
-                           // currentMessages.forEach(message -> addToChat(message,false));
-                    }
-                }catch (SQLException e){
-                    e.printStackTrace();
-                    e.getCause();
-                } catch (InterruptedException | ParseException e) {
-                    throw new RuntimeException(e);
+                    //then,
+                    // currentMessages.forEach(message -> addToChat(message,false));
                 }
-
-
+            } catch (SQLException e) {
+                e.printStackTrace();
+                e.getCause();
+            } catch (InterruptedException | ParseException e) {
+                throw new RuntimeException(e);
             }
         }
-//        ObservableList<Message> messages = FXCollections.observableList(new ArrayList<>());
-//        chatPage.setItems(messages);
-//        chatPage.setCellFactory(new CellRenderer());
-//        ListView conversationPage;
     }
 
     public void recentMessageClicked() throws SQLException, ParseException {
@@ -737,16 +834,16 @@ public class ChatController implements Initializable {
                 //setLastTalk
                 String date = resultSet.getString("last_talk_date");
                 String time = resultSet.getString("last_talk_time");
-                DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Date lastTalk = df.parse(date+" "+time);
                 conservation.setLastTalk(lastTalk);
 
                 //Users
                 String containUsers = resultSet.getString("contain_users");
                 String[]users =  containUsers.split(",");
+
                 ArrayList<String> containUserArraylist = new ArrayList<>(Arrays.asList(users));
                 conservation.setContainUsers(containUserArraylist);
-                if(conservation.getType()==1){
+                if(conservation.getType()==1){//会话名称就是对方id
                     if(users[0].equals(usernameLabel.getText())){
                         conservation.setTarget(Integer.parseInt(users[1]));
                         conservation.setName(users[1]);
@@ -757,10 +854,8 @@ public class ChatController implements Initializable {
                 }else {
                     //群聊记录
                     conservation.setName("group "+conservation.getID());
+                    conservation.setTarget(conservation.getID());//群聊的target就是ID
                 }
-                //获取具体的聊天记录内容
-//                String containMessages = resultSet.getString("contain_messages");
-//                String[]messages = containMessages.split(",");
                 conservationArrayList.add(conservation);
             }
             conservationArrayList.sort(Comparator.comparing(Conservation::getLastTalk).reversed());
@@ -774,4 +869,92 @@ public class ChatController implements Initializable {
         }
 
     }
-}
+
+    public void createGroupConservationClicked() throws SQLException {
+        logger.info("click create group conservation");
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Choose Users");
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+        ButtonType OK = ButtonType.OK;
+        dialog.getDialogPane().getButtonTypes().add(OK);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+       // ArrayList<CheckBox> checkBoxes = new ArrayList<>();
+        Map <CheckBox,User> map = new HashMap<>();
+
+        for (int i = 0; i < users.size(); i++) {
+            if (!users.get(i).getName().equals(usernameLabel.getText())) {
+                CheckBox tmp = new CheckBox(users.get(i).getName());
+         //       checkBoxes.add(tmp);
+                map.put(tmp,users.get(i));
+                grid.add(tmp,0,i);
+            }
+        }
+
+        dialog.getDialogPane().setContent(grid);
+        Optional<ButtonType> result = dialog.showAndWait();
+        if(result.isPresent()&&result.get()==ButtonType.OK){
+
+            ArrayList<User> selectedUsers = new ArrayList<>();
+            for (Map.Entry<CheckBox,User> entry : map.entrySet()){
+                if (entry.getKey().isSelected()){
+                    selectedUsers.add(entry.getValue());
+                }
+            }
+            if(!selectedUsers.isEmpty()){
+                createGroup(selectedUsers);
+            }else {
+                Alert alert = new Alert(AlertType.WARNING);
+                alert.setTitle("Choose Empty");
+                alert.setHeaderText("Waring");
+                alert.setContentText("You should choose at least one person");
+                alert.showAndWait();
+            }
+
+        }
+
+    }
+    public void createGroup(ArrayList<User> selectedUsers) throws SQLException {
+        logger.info("start create group");
+        ArrayList<String> selectedString = new ArrayList<>();
+        selectedString.add(usernameLabel.getText());
+        StringBuilder containUsers = new StringBuilder(usernameLabel.getText());
+        for (User selectedUser : selectedUsers) {
+            selectedString.add(selectedUser.getName());
+            containUsers.append(",").append(selectedUser.getName());
+        }
+        Date createDate = Date.from(Instant.now());
+
+        String sendTime = df.format(Date.from(Instant.now()));
+        String date = sendTime.substring(0,10);
+        String time = sendTime.substring(11);
+        Conservation conservation = new Conservation();
+        conservation.setContainUsers(selectedString);
+        conservation.setType(2);
+        conservation.setPicture("default");
+        conservation.setLastTalk(createDate);
+        stmt.execute("insert into conservation (type, contain_users, picture, last_talk_date, last_talk_time)"
+            + " values (2,'"+containUsers+"','default','"+date+"','"+time+"') ");
+        ResultSet resultSet = stmt.executeQuery("select id from conservation where contain_users = '"+containUsers+"'"
+            + "and type=2 and last_talk_date = '"+date+"' and last_talk_time = '"+time+"'");
+        if(resultSet.next()) {conservation.setID(resultSet.getInt("id"));}
+        chatPage.getItems().clear();
+        targetID = currentConservationID;
+        Message createConservationMessage = new Message();
+        createConservationMessage.setConversationID(currentConservationID);
+        createConservationMessage.setTarget(String.valueOf(targetID));
+        createConservationMessage.setConversationType(2);
+        createConservationMessage.setID(currentConservationID);
+        createConservationMessage.setName("group "+currentConservationID);
+        createConservationMessage.setMsg("create a conservation local");
+        createConservationMessage.setSnedDateDate(createDate);
+
+        // createConservationMessage.setType();
+        addToRecentConservation(createConservationMessage);}
+
+
+
+    }

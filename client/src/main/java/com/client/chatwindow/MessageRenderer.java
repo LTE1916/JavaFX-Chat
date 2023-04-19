@@ -34,7 +34,6 @@ class MessageRenderer implements Callback<ListView<Conservation>,ListCell<Conser
             name = new Text(String.valueOf(conservation.getTarget()));   //私聊
           }else  {
             name = new Text(conservation.getName());//2人以上群聊
-
           }
             ImageView picture = new ImageView();
             Image image = new Image(getClass().getClassLoader().getResource("images/"+ conservation.getPicture().toLowerCase()+".png").toString(),50,50,true,true);
