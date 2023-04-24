@@ -35,11 +35,23 @@ class MessageRenderer implements Callback<ListView<Conservation>,ListCell<Conser
           }else  {
             name = new Text(conservation.getName());//2人以上群聊
           }
+          ImageView statusImageView = new ImageView();
+
             ImageView picture = new ImageView();
             Image image = new Image(getClass().getClassLoader().getResource("images/"+ conservation.getPicture().toLowerCase()+".png").toString(),50,50,true,true);
             picture.setImage(image);
 
-            hBox.getChildren().addAll(name,picture);
+            if(conservation.getType()==1&&conservation.getStatus()!=null) {
+
+            Image statusImage = new Image(getClass().getClassLoader().getResource(
+                    "images/" + conservation.getStatus().toLowerCase() + ".png")
+                .toString(), 16, 16, true, true);
+            statusImageView.setImage(statusImage);
+            hBox.getChildren().addAll(statusImageView,name,picture);
+          }else {
+              hBox.getChildren().addAll(name,picture);
+            }
+
             hBox.setAlignment(Pos.CENTER_LEFT);
             setGraphic(hBox);
 

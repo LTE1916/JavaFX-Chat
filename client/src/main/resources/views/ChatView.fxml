@@ -116,7 +116,7 @@
                                                       <Font name="SansSerif Regular" size="14.0" />
                                                    </font>
                                                 </Label>
-                                                <ImageView fx:id="MultiConservation" onMouseClicked="#createGroupConservationClicked" fitHeight="25.0" fitWidth="33.0" pickOnBounds="true" preserveRatio="true">
+                                                <ImageView fx:id="MultiConservation" fitHeight="25.0" fitWidth="33.0" onMouseClicked="#createGroupConservationClicked" pickOnBounds="true" preserveRatio="true">
                                                    <image>
                                                       <Image url="@../images/plus.png" />
                                                    </image>
@@ -144,7 +144,7 @@
    <top>
       <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" style="-fx-background-color: #031c30;" BorderPane.alignment="CENTER">
          <center>
-            <ImageView fitHeight="79.0" fitWidth="522.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+            <ImageView fitHeight="79.0" fitWidth="522.0" onMouseClicked="#groupUsersClicked" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
                <image>
                   <Image url="@../images/sustech.png" />
                </image>

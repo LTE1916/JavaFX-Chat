@@ -374,6 +374,11 @@ public class ChatController implements Initializable {
             userList.setItems(users);
             userList.setCellFactory(new CellRenderer());
             setOnlineLabel(String.valueOf(msg.getUserlist().size()));
+            try {
+                recentMessageClicked();
+            } catch (SQLException | ParseException e) {
+                throw new RuntimeException(e);
+            }
         });
         logger.info("setUserList() method Exit");
     }
@@ -839,17 +844,24 @@ public class ChatController implements Initializable {
 
                 //Users
                 String containUsers = resultSet.getString("contain_users");
-                String[]users =  containUsers.split(",");
+                String[] user =  containUsers.split(",");
 
-                ArrayList<String> containUserArraylist = new ArrayList<>(Arrays.asList(users));
+                ArrayList<String> containUserArraylist = new ArrayList<>(Arrays.asList(user));
                 conservation.setContainUsers(containUserArraylist);
                 if(conservation.getType()==1){//会话名称就是对方id
-                    if(users[0].equals(usernameLabel.getText())){
-                        conservation.setTarget(Integer.parseInt(users[1]));
-                        conservation.setName(users[1]);
+                    if(user[0].equals(usernameLabel.getText())){
+                        conservation.setTarget(Integer.parseInt(user[1]));
+                        conservation.setName(user[1]);
                     }else {
-                        conservation.setTarget(Integer.parseInt(users[0]));
-                        conservation.setName(users[0]);
+                        conservation.setTarget(Integer.parseInt(user[0]));
+                        conservation.setName(user[0]);
+                    }
+                    int target = conservation.getTarget();
+                    for (int i = 0; i < users.size(); i++) {
+                        if(users.get(i).getName().equals(String.valueOf(target))){
+                            conservation.setStatus(users.get(i).getStatus().toString());
+                            break;
+                        }
                     }
                 }else {
                     //群聊记录
@@ -955,6 +967,30 @@ public class ChatController implements Initializable {
         // createConservationMessage.setType();
         addToRecentConservation(createConservationMessage);}
 
+    public void groupUsersClicked() throws SQLException {
+        logger.info("click group users conservation");
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Users in group");
+
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+        ResultSet resultSet = stmt.executeQuery("select contain_users from conservation where id = '"+currentConservationID+"'");
+        String user = "";
+        if(resultSet.next()){
+            user = resultSet.getString("contain_users");
+        }
+        String[]groupUsers = user.split(",");
+        for (int i = 0; i <groupUsers.length; i++) {
+            Label tmp = new Label();
+            tmp.setText(groupUsers[i]);
+            grid.add(tmp,0,i);
+        }
+        dialog.getDialogPane().setContent(grid);
+        Optional<ButtonType> result = dialog.showAndWait();
+    }
 
 
     }

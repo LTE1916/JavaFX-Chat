@@ -4,7 +4,9 @@ import com.client.chatwindow.ChatController;
 import com.client.chatwindow.Listener;
 import com.client.settings.SettingController;
 import com.client.util.ResizeHelper;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -243,16 +245,21 @@ public class LoginController implements Initializable {
             numberOfSquares--;
         }
         try {
+            InputStream inputStream = getClass().getClassLoader().getResource("").openStream();
             String filepath = "client/src/main/resources/settings.ini";
             FileInputStream fis = new FileInputStream(filepath);
             Properties pps = new Properties();
             pps.load(fis);
             port = Integer.parseInt(pps.getProperty("port"));
             hostname = pps.getProperty("hostname");
-
+//            port = 9001;
+//            hostname = "192.168.137.1";
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+
+
         portTextField.setText(String.valueOf(port));
         hostNameTextField.setText(hostname);
 
