@@ -5,12 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-/**
- * @author Dominic
- * @since 16-Oct-16
- * Website: www.dominicheal.com
- * Github: www.github.com/DomHeal
- */
+
 public class VoicePlayback extends VoiceUtil {
     public static void playAudio(byte[] audio) {
         try {

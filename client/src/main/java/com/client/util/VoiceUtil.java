@@ -3,12 +3,6 @@ package com.client.util;
 import javax.sound.sampled.AudioFormat;
 import java.io.ByteArrayOutputStream;
 
-/**
- * @author Dominic
- * @since 16-Oct-16
- * Website: www.dominicheal.com
- * Github: www.github.com/DomHeal
- */
 public class VoiceUtil {
     public static void setRecording(boolean flag){
         isRecording = flag;
