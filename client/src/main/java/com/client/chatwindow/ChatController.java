@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -83,6 +84,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import sun.misc.IOUtils;
 import sun.nio.cs.UTF_32;
 
 
@@ -190,7 +192,7 @@ public class ChatController implements Initializable {
                 //将发送的信息先传到数据库，再从数据库获取该条信息的id
                 if (resultSet.next()) {
                     int currentMessageID = resultSet.getInt("id");
-                    Listener.send(msg, String.valueOf(targetID),currentMessageID, 1, currentConservationID ,sendDate,MessageType.USER);
+                    Listener.send(msg, String.valueOf(targetID),currentMessageID, 1, currentConservationID ,sendDate,MessageType.USER,null);
                     messageBox.clear();
                     //send
                     //update conservation in DB
@@ -209,7 +211,7 @@ public class ChatController implements Initializable {
                     + " where (date = '"+date+"' and time='"+time+"' and fromid = '"+currentUserID+"' and belong = "+currentConservationID+" and type =2)") ;
                 if(resultSet.next()){
                     int currentMessageID = resultSet.getInt("id");
-                    Listener.send(msg,String.valueOf(currentConservationID),currentMessageID,2,currentConservationID,sendDate,MessageType.USER);
+                    Listener.send(msg,String.valueOf(currentConservationID),currentMessageID,2,currentConservationID,sendDate,MessageType.USER,null);
                     messageBox.clear();
                     stmt.execute("update conservation set contain_messages = concat(contain_messages,',"+currentMessageID +"') where id = '"+currentConservationID+"'");
                     stmt.execute("update conservation set last_talk_date = current_date where id ='"+currentConservationID+"'");
@@ -255,17 +257,23 @@ public class ChatController implements Initializable {
 
         Task<HBox> othersMessages = new Task<HBox>() {
             @Override
-            public HBox call() throws Exception {
-                Image image = new Image(getClass().getClassLoader().getResource("images/" + msg.getPicture() + ".png").toString());
+            public HBox call()  {
+                Image image = new Image(getClass().getClassLoader().getResource("images/" + msg.getName() + ".png").toString());
                 ImageView profileImage = new ImageView(image);
                 profileImage.setFitHeight(32);
                 profileImage.setFitWidth(32);
                 BubbledLabel bl = new BubbledLabel();
                 if (msg.getType() == MessageType.VOICE){
-                    ImageView imageview = new ImageView(new Image(getClass().getClassLoader().getResource("images/sound.png").toString()));
-                    bl.setGraphic(imageview);
-                    bl.setText("Sent a voice message!");
-                    VoicePlayback.playAudio(msg.getVoiceMsg());
+                    try {
+                        ImageView imageview = new ImageView(new Image(getClass().getClassLoader().getResource("images/sound.png").toString()));
+                        bl.setGraphic(imageview);
+                        bl.setText("Sent a voice message!");
+                        VoicePlayback.playAudio(msg.getVoiceMsg());
+                    }catch (Exception e){
+                        System.out.println("IMAGE ERROR");
+                    }
+
+
                 }else {
                     bl.setText(msg.getName() + ": " + msg.getMsg());
                 }
@@ -373,6 +381,9 @@ public class ChatController implements Initializable {
         return getClass().getResource("png_40/" + hexStr + ".png").toExternalForm();
     }
 
+    public Label getUsernameLabel() {
+        return usernameLabel;
+    }
 
     public void setUsernameLabel(String username) {
         this.usernameLabel.setText(username);
@@ -394,7 +405,7 @@ public class ChatController implements Initializable {
             ObservableList<User> users = FXCollections.observableList(msg.getUsers());
             userList.setItems(users);
             userList.setCellFactory(new CellRenderer());
-            setOnlineLabel(String.valueOf(msg.getUserlist().size()));
+            setOnlineLabel(String.valueOf(msg.getOnlineCount()));
             try {
                 recentMessageClicked();
             } catch (SQLException | ParseException e) {
@@ -417,12 +428,13 @@ public class ChatController implements Initializable {
             tray.setAnimationType(AnimationType.POPUP);
             tray.setImage(profileImg);
             tray.showAndDismiss(Duration.seconds(5));
-            try {
+
+            try {recentMessageClicked();
                 Media hit = new Media(getClass().getClassLoader().getResource("sounds/notification.wav").toString());
                 MediaPlayer mediaPlayer = new MediaPlayer(hit);
                 mediaPlayer.play();
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("MEDIA ERROR");
             }
 
         });
@@ -1038,19 +1050,6 @@ public class ChatController implements Initializable {
             InputStream is = new FileInputStream(file);
             byte[]b = toByteArray(is);
 
-            String msg = new String(b,StandardCharsets.UTF_8);
-            InputStream inputStream = toInputStream(msg.getBytes());
-            //test
-            String string = "C:\\Users\\1\\Desktop\\Chen Erd.jpg";
-            FileOutputStream fos = new FileOutputStream(new File(string));
-            int read;
-            byte[]bytes = new byte[1024];
-            while((read = inputStream.read(bytes))!=-1){
-                fos.write(bytes,0,read);
-            }
-            //
-
-
 
             Date sendDate = Date.from(Instant.now());
             String sendTime = df.format(sendDate);
@@ -1068,8 +1067,8 @@ public class ChatController implements Initializable {
                 //将发送的信息先传到数据库，再从数据库获取该条信息的id
                 if (r.next()) {
                     int currentMessageID = r.getInt("id");
-                    Listener.send(msg, target, currentMessageID, currentConservationType,
-                        currentConservationID, sendDate, MessageType.File);
+                    Listener.send(name, target, currentMessageID, currentConservationType,
+                        currentConservationID, sendDate, MessageType.File ,b);
                     //update conservation in DB
                     stmt.execute(
                         "update conservation set contain_messages = concat(contain_messages,',"
@@ -1093,8 +1092,8 @@ public class ChatController implements Initializable {
                     + currentUserID + "' and belong = " + currentConservationID + " and type =2)");
                 if (r.next()) {
                     int currentMessageID = r.getInt("id");
-                    Listener.send(msg, target, currentMessageID, currentConservationType,
-                        currentConservationID, sendDate, MessageType.File);
+                    Listener.send(name, target, currentMessageID, currentConservationType,
+                        currentConservationID, sendDate, MessageType.File, b);
                     stmt.execute(
                         "update conservation set contain_messages = concat(contain_messages,',"
                             + currentMessageID + "') where id = '" + currentConservationID + "'");
@@ -1107,31 +1106,23 @@ public class ChatController implements Initializable {
         }
        // Listener.sendFile(file);
     }
-    public void saveFile(String msg,int id){
+    public void saveFile(String name,byte[]bytes,int id){
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
-                String name = "";
-                try {
-                    ResultSet r = stmt.executeQuery("select text from message_history where id ='"+id+"'");
-                    if(r.next()){
-                        name = r.getString("text");
-                    }
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
+
                 try {
                     DirectoryChooser directoryChooser = new DirectoryChooser();
                     File dest = directoryChooser.showDialog(stage);
                     if(dest!=null) {
                         String string = dest.getAbsolutePath() + "\\" + name;
-                        File tempFile = File.createTempFile("temp", ".jpg");
-                        InputStream is = new ByteArrayInputStream(msg.getBytes());
+
+                        InputStream is = new ByteArrayInputStream(bytes);
                         //is转成file
 
-                        File file = new File(string);
+                        //6File file = new File(string);
                         //  file.createNewFile();
-                        FileOutputStream fos = new FileOutputStream(new File(string));
+                        FileOutputStream fos = new FileOutputStream(string);
                         int read;
                         byte[] bytes = new byte[1024 * 4];
                         while ((read = is.read(bytes)) != -1) {
@@ -1157,6 +1148,17 @@ public class ChatController implements Initializable {
         });
 
     }
+    public static String toS(InputStream is) throws IOException {
+        final char[] buffer = new char[1024];
+        final StringBuilder out = new StringBuilder();
+        Reader in = new InputStreamReader(is, StandardCharsets.UTF_8);
+        int length;
+        while ((length = in.read(buffer, 0, buffer.length)) != -1) {
+            out.append(buffer, 0, length);
+        }
+        return out.toString();
+    }
+
     public static byte[] toByteArray(InputStream in) throws IOException {
         ByteArrayOutputStream out=new ByteArrayOutputStream();
         byte[] buffer=new byte[1024];

@@ -80,10 +80,10 @@ public class Listener implements Runnable{
                             controller.addToChat(message,true);
                             break;
                         case File:
-                            String msg = message.getMsg();
-
-                            controller.saveFile(msg,message.getID());
-
+                            if(!message.getName().equals(controller.getUsernameLabel().getText())) {
+                                controller.saveFile(message.getMsg(), message.getFile(),
+                                    message.getID());
+                            }
                             message.setMsg("send a File ");
                             controller.addToChat(message,true);
                             break;
@@ -131,7 +131,7 @@ public class Listener implements Runnable{
     /* This method is used for sending a normal Message
      * @param msg - The message which the user generates
      */
-    public static void send(String msg,String targetID,int messageID,int conservationType, int conservationID , Date date , MessageType messageType) throws IOException {
+    public static void send(String msg,String targetID,int messageID,int conservationType, int conservationID , Date date , MessageType messageType ,byte[]bytes) throws IOException {
         Message newMessage = new Message();
         newMessage.setName(username);
         newMessage.setType(messageType);//意思是来自用户发送的文字消息或者文件
@@ -143,6 +143,9 @@ public class Listener implements Runnable{
         newMessage.setConversationID(conservationID);
         newMessage.setSnedDateDate(date);
         newMessage.setTarget(targetID);
+        if(messageType.equals(MessageType.File)){
+            newMessage.setFile(bytes);
+        }
         oos.writeObject(newMessage);
         oos.flush();
     }

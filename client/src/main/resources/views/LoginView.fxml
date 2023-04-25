@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.String?>
-<?import javafx.collections.FXCollections?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
@@ -18,12 +15,12 @@
 <?import javafx.scene.text.Font?>
 
 <BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="613.0" prefWidth="840.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.client.login.LoginController">
-   <center>
-      <GridPane layoutY="100.0" prefHeight="588.0" prefWidth="820.0" BorderPane.alignment="CENTER">
+   <left>
+      <GridPane prefHeight="588.0" prefWidth="820.0" BorderPane.alignment="CENTER">
          <columnConstraints>
             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="325.0" minWidth="10.0" prefWidth="78.20000610351562" />
-            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="325.0" minWidth="10.0" prefWidth="167.39998474121094" />
-            <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="593.600015258789" minWidth="10.0" prefWidth="390.0000366210937" />
+            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="325.0" minWidth="10.0" prefWidth="180.99999999999997" />
+            <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="593.600015258789" minWidth="10.0" prefWidth="371.4" />
             <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="250.39992675781252" minWidth="6.800012207031273" prefWidth="66.60000000000002" />
             <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="229.0" minWidth="3.39996337890625" prefWidth="64.20000000000005" />
             <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="325.0" minWidth="10.0" prefWidth="68.59992675781245" />
@@ -36,31 +33,21 @@
             <RowConstraints maxHeight="149.0" minHeight="10.0" prefHeight="53.0" vgrow="SOMETIMES" />
             <RowConstraints maxHeight="98.39999999999998" minHeight="10.0" prefHeight="44.799963378906284" vgrow="SOMETIMES" />
             <RowConstraints maxHeight="100.20001831054685" minHeight="10.0" prefHeight="42.40004882812502" vgrow="SOMETIMES" />
-            <RowConstraints maxHeight="126.0" minHeight="12.0" prefHeight="23.199987792968784" />
-            <RowConstraints maxHeight="98.39998779296877" minHeight="10.0" prefHeight="49.5999694824219" vgrow="SOMETIMES" />
-            <RowConstraints maxHeight="127.0" minHeight="0.0" prefHeight="89.60003051757815" valignment="CENTER" />
-            <RowConstraints maxHeight="110.0" minHeight="10.0" prefHeight="34.4000244140625" />
-            <RowConstraints maxHeight="110.0" minHeight="9.0" prefHeight="19.999987792968795" />
+            <RowConstraints maxHeight="126.0" minHeight="12.0" prefHeight="73.60002441406249" />
+            <RowConstraints maxHeight="117.60003051757815" minHeight="10.0" prefHeight="45.79996337890623" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="127.0" minHeight="0.0" prefHeight="30.200036621093773" valignment="CENTER" />
+            <RowConstraints maxHeight="110.0" minHeight="10.0" prefHeight="43.200000000000045" />
+            <RowConstraints maxHeight="110.0" minHeight="9.0" prefHeight="24.0" />
          </rowConstraints>
          <children>
-            <Label text="Hostname: " textAlignment="CENTER" textFill="#f89406" GridPane.columnIndex="1" GridPane.rowIndex="8">
-               <font>
-                  <Font name="System Bold" size="22.0" />
-               </font></Label>
             <TextField fx:id="usernameTextField" prefHeight="35.0" prefWidth="392.0" GridPane.columnIndex="2" GridPane.rowIndex="5" />
             <PasswordField fx:id="passwordTextField" onKeyPressed="#login" prefHeight="35.0" prefWidth="392.0" GridPane.columnIndex="2" GridPane.rowIndex="6" />
-            <Button id="ConnectBtn" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#loginButtonAction" prefHeight="67.0" prefWidth="121.0" stylesheets="@../styles/Login.css" text="Connect" GridPane.columnIndex="2" GridPane.rowIndex="10" />
-            <TextField fx:id="hostNameTextField" prefWidth="188.0" text="localhost" GridPane.columnIndex="2" GridPane.rowIndex="8" />
-            <Label prefHeight="30.0" prefWidth="62.0" text="Port: " textFill="#f89406" GridPane.columnIndex="1" GridPane.rowIndex="9">
-               <font>
-                  <Font name="System Bold" size="22.0" />
-               </font></Label>
-            <TextField fx:id="portTextField" prefHeight="13.0" prefWidth="149.0" text="9001" GridPane.columnIndex="2" GridPane.rowIndex="9" />
+            <Button id="ConnectBtn" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#loginButtonAction" prefHeight="67.0" prefWidth="121.0" stylesheets="@../styles/Login.css" text="Connect" GridPane.columnIndex="2" GridPane.rowIndex="8" />
+            <Button id="ConnectBtn" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#SignUpButtonAction" prefHeight="67.0" prefWidth="121.0" stylesheets="@../styles/Login.css" text="Sign up" GridPane.columnIndex="2" GridPane.rowIndex="10" />
             <Label text="Username: " textFill="#f89406" GridPane.columnIndex="1" GridPane.rowIndex="5">
                <font>
                   <Font name="System Bold" size="22.0" />
                </font></Label>
-            <Label prefHeight="22.0" prefWidth="73.0" text="Server Details" textFill="#f89406" GridPane.columnIndex="2" GridPane.rowIndex="7" />
             <StackPane GridPane.columnIndex="2" GridPane.rowIndex="3">
                <children>
                   <ImageView fx:id="SarahView" fitHeight="93.0" fitWidth="124.0" pickOnBounds="true" preserveRatio="true" visible="false">
@@ -80,17 +67,7 @@
                   </ImageView>
                </children>
             </StackPane>
-            <ChoiceBox fx:id="imagePicker" prefWidth="150.0" GridPane.columnIndex="2" GridPane.rowIndex="4">
-               <items>
-                  <FXCollections fx:factory="observableArrayList">
-                     <String fx:value="Default" />
-                     <String fx:value="Dominic" />
-                     <String fx:value="Sarah" />
-                  </FXCollections>
-               </items>
-                    </ChoiceBox>
-            <Label fx:id="selectedPicture" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-            <Label prefHeight="86.0" prefWidth="522.0" text="SUSTech Chat" textFill="#f89406" GridPane.columnIndex="1" GridPane.rowIndex="2">
+            <Label prefHeight="32.0" prefWidth="190.0" text="SUSTech Chat" textFill="#f89406" GridPane.columnIndex="1" GridPane.rowIndex="2">
                <font>
                   <Font name="System Bold" size="24.0" />
                </font>
@@ -121,5 +98,5 @@
             </Button>
          </children>
       </GridPane>
-   </center>
+   </left>
 </BorderPane>

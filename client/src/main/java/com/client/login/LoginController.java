@@ -4,7 +4,6 @@ import com.client.chatwindow.ChatController;
 import com.client.chatwindow.Listener;
 import com.client.settings.SettingController;
 import com.client.util.ResizeHelper;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -13,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Properties;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -23,6 +23,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -32,6 +33,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
@@ -53,7 +55,7 @@ public class LoginController implements Initializable {
     @FXML private TextField portTextField;
     @FXML private TextField usernameTextField;
     @FXML private TextField passwordTextField;
-    @FXML private ChoiceBox imagePicker;
+
     @FXML private Label selectedPicture;
     public static ChatController con;
     public static SettingController settingController;
@@ -65,6 +67,11 @@ public class LoginController implements Initializable {
     private Scene scene;
 
     private static LoginController instance;
+    private Connection connection = DriverManager.getConnection
+        ("jdbc:postgresql://localhost:5432/java_chat_user","test","123456789");
+    //connect to DATA BASE
+
+    private Statement stmt = connection.createStatement();
 
     public LoginController() throws SQLException {
         instance = this;
@@ -124,11 +131,7 @@ public class LoginController implements Initializable {
             TODO:
              对密码要加密，避免明文传输和存储
              */
-            Connection connection = DriverManager.getConnection
-                ("jdbc:postgresql://localhost:5432/java_chat_user","test","123456789");
-            //connect to DATA BASE
 
-            Statement stmt = connection.createStatement();
             ResultSet resultSet = stmt.executeQuery("select account from user_table "
                 + "where account ='"+Integer.parseInt(username)+"' and password = '"+password+"'");
             /*
@@ -136,12 +139,13 @@ public class LoginController implements Initializable {
             对数据库返回结果进行判断
              */
             if(resultSet.next()){
-                String picture = selectedPicture.getText();
+               // String picture = selectedPicture.getText();
 
                 FXMLLoader fXMlLoader = new FXMLLoader(getClass().getResource("/views/ChatView.fxml"));
                 Parent window =  fXMlLoader.load();
                 con = fXMlLoader.getController();
-                Listener listener = new Listener(hostname, port, username, picture, con);
+
+                Listener listener = new Listener(hostname, port, username, "default", con);
                 Thread x = new Thread(listener);
                 x.start();
                 this.scene = new Scene(window);
@@ -181,15 +185,12 @@ public class LoginController implements Initializable {
             ResizeHelper.addResizeListener(stage);
             stage.centerOnScreen();
             con.setUsernameLabel(usernameTextField.getText());
-            con.setImageLabel(selectedPicture.getText());
+           // con.setImageLabel(selectedPicture.getText());
         });
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        imagePicker.getSelectionModel().selectFirst();
-        selectedPicture.textProperty().bind(imagePicker.getSelectionModel().selectedItemProperty());
-        selectedPicture.setVisible(false);
 
         /* Drag and Drop */
         borderPane.setOnMousePressed(event -> {
@@ -208,37 +209,7 @@ public class LoginController implements Initializable {
             borderPane.setCursor(Cursor.DEFAULT);
         });
 
-        imagePicker.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> selected, String oldPicture, String newPicture) {
-                if (oldPicture != null) {
-                    switch (oldPicture) {
-                        case "Default":
-                            DefaultView.setVisible(false);
-                            break;
-                        case "Dominic":
-                            DominicView.setVisible(false);
-                            break;
-                        case "Sarah":
-                            SarahView.setVisible(false);
-                            break;
-                    }
-                }
-                if (newPicture != null) {
-                    switch (newPicture) {
-                        case "Default":
-                            DefaultView.setVisible(true);
-                            break;
-                        case "Dominic":
-                            DominicView.setVisible(true);
-                            break;
-                        case "Sarah":
-                            SarahView.setVisible(true);
-                            break;
-                    }
-                }
-            }
-        });
+
         int numberOfSquares = 30;
         while (numberOfSquares > 0){
             generateAnimation();
@@ -260,8 +231,7 @@ public class LoginController implements Initializable {
 
 
 
-        portTextField.setText(String.valueOf(port));
-        hostNameTextField.setText(hostname);
+
 
         MainLauncher.controllers.put(this.getClass().getSimpleName(),this);
     }
@@ -362,7 +332,68 @@ public class LoginController implements Initializable {
             alert.setHeaderText(message);
             alert.setContentText(content);
             alert.showAndWait();
+
         });
+
+    }
+
+    public void SignUpButtonAction() throws SQLException {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Sign up");
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+        Label usernameLabel = new Label();
+        Label passwordLabel = new Label();
+        usernameLabel.setText("username");
+        passwordLabel.setText("passwordLabel");
+        TextField textField = new TextField();
+        PasswordField passwordField = new PasswordField();
+        grid.add(usernameLabel,0,0);
+        grid.add(textField,1,0);
+        grid.add(passwordLabel,0,1);
+        grid.add(passwordField,1,1);
+        dialog.getDialogPane().setContent(grid);
+        Optional<ButtonType> buttonType = dialog.showAndWait();
+        if(buttonType.get().equals(ButtonType.OK)){
+            String name = textField.getText();
+            String password = passwordField.getText();
+            if(name.equals("")){
+                showWaringDialog("Account number can not be null.","Please input account number.");
+                SignUpButtonAction();
+                return ;
+            }
+            if(password.length()>0&&(password.length()<6||password.length()>32)){
+                showWaringDialog("Password length wrong.","The length of password should between 6 to 32.");
+                SignUpButtonAction();
+                return;
+            }else if(password.length()==0){
+                showWaringDialog("Password can not be null.","Please input password.");
+                SignUpButtonAction();
+                return;
+            }
+            //connect to DATA BASE
+
+            ResultSet r = stmt.executeQuery("select account from user_table where account = '"+name+"'");
+            if(r.next()){
+                Alert alert = new Alert(AlertType.INFORMATION);
+                alert.setTitle("ID existed");
+                alert.setHeaderText("name occupied");
+                alert.setContentText("This name already be occupied.\nPlease try another name and tey again!");
+                alert.showAndWait();
+            }else {
+
+                stmt.execute("insert into user_table (account, password, picture) VALUES ('"+name+"','"+password+"','"+name+"')");
+                Alert alert = new Alert(AlertType.INFORMATION);
+                alert.setTitle("Successful");
+                alert.setTitle("Welcome");
+                alert.setContentText("Sign up successfully,Welcome to Sustech Chat.\nplease login in");
+                alert.showAndWait();
+            }
+        }
 
     }
 

@@ -43,6 +43,8 @@ public class Message implements Serializable {
 
     private byte[] voiceMsg;
 
+    private  byte[]file;
+
     public String getPicture() {
         return picture;
     }
@@ -123,4 +125,12 @@ public class Message implements Serializable {
   }
 
     public Date getSendDate(){return snedDate;}
+
+    public byte[] getFile() {
+        return file;
+    }
+
+    public void setFile(byte[] file) {
+        this.file = file;
+    }
 }
