@@ -125,7 +125,7 @@
                                                       <Font name="SansSerif Regular" size="14.0" />
                                                    </font>
                                                 </Label>
-                                                <ImageView fx:id="MultiConservation" fitHeight="25.0" fitWidth="33.0" onMouseClicked="#createGroupConservationClicked" pickOnBounds="true" preserveRatio="true">
+                                                <ImageView fx:id="multiConservation" fitHeight="25.0" fitWidth="33.0" onMouseClicked="#createGroupConservationClicked" pickOnBounds="true" preserveRatio="true">
                                                    <image>
                                                       <Image url="@../images/plus.png" />
                                                    </image>

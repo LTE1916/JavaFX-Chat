@@ -1,20 +1,25 @@
 package com.client.chatwindow;
 
+import static com.messages.MessageType.CONNECTED;
+
 import com.client.login.LoginController;
 import com.messages.Message;
 import com.messages.MessageType;
 import com.messages.Status;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.net.SocketException;
-import java.nio.file.Files;
 import java.util.Date;
-import javafx.stage.FileChooser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.net.Socket;
-
-import static com.messages.MessageType.CONNECTED;
 
 public class Listener implements Runnable{
 

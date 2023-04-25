@@ -1,10 +1,6 @@
 package com.client.chatwindow;
 
-import static com.client.login.LoginController.con;
-
 import com.messages.Conservation;
-import com.messages.Message;
-import com.messages.User;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import javafx.geometry.Pos;

@@ -15,22 +15,18 @@ import com.messages.bubble.BubbledLabel;
 import com.traynotifications.animations.AnimationType;
 import com.traynotifications.notification.TrayNotification;
 import java.awt.event.KeyListener;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.Reader;
 import java.net.SocketException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -47,7 +43,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -62,14 +58,31 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
@@ -81,61 +94,71 @@ import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-import sun.misc.IOUtils;
-import sun.nio.cs.UTF_32;
-
 
 public class ChatController implements Initializable {
 
-    @FXML private TextArea messageBox;
-    @FXML private Label usernameLabel;
-    @FXML private Label onlineCountLabel;
-    @FXML private ListView userList;
-    @FXML private ImageView userImageView;
-    @FXML private ImageView MultiConservation;
-    @FXML private Button recordBtn;
-    @FXML private Button sendBtn;
-    @FXML ListView chatPage;
-    @FXML ListView messageList;
-    @FXML ListView contactsList;
-    @FXML ListView statusList;
-    @FXML BorderPane borderPane;
-    @FXML TabPane leftPane;
-    @FXML Tab recentMessageTab;
-    @FXML Tab onlineUserTab;
-    @FXML ComboBox statusComboBox;
-    @FXML ImageView microphoneImageView;
+    @FXML
+    private TextArea messageBox;
+    @FXML
+    private Label usernameLabel;
+    @FXML
+    private Label onlineCountLabel;
+    @FXML
+    private ListView userList;
+    @FXML
+    private ImageView userImageView;
 
+    @FXML
+    ListView chatPage;
+    @FXML
+    ListView messageList;
+    @FXML
+    ListView contactsList;
+    @FXML
+    ListView statusList;
+    @FXML
+    BorderPane borderPane;
+    @FXML
+    TabPane leftPane;
+    @FXML
+    Tab recentMessageTab;
+    @FXML
+    Tab onlineUserTab;
+    @FXML
+    ComboBox statusComboBox;
+    @FXML
+    ImageView microphoneImageView;
 
-    Connection connection = DriverManager.getConnection
-        ("jdbc:postgresql://localhost:5432/java_chat_user","test","123456789");
-    //connect to DATA BASE
+    Connection connection = DriverManager.getConnection(
+        "jdbc:postgresql://localhost:5432/java_chat_user", "test", "123456789");
+
     Statement stmt = connection.createStatement();
     private boolean threadFinished = true;
 
     private int currentConservationID = 0;
     private int currentConservationType = -1;
 
-    private int currentUserID ;
+    private int currentUserID;
 
-    private int targetID=0;
+    private int targetID = 0;
     private ArrayList<User> users = new ArrayList<>();
 
     private ArrayList<Message> currentMessages = new ArrayList<>();
-    private Map<Integer, ArrayList<Message>> messageListMap = new HashMap<>();//map conservation ID to messageHistory
-    private Map<Integer,String> conversationTypeMap = new HashMap<>();
+    private Map<Integer, ArrayList<Message>> messageListMap = new HashMap<>();
+    //map conservation ID to messageHistory
+    private Map<Integer, String> conversationTypeMap = new HashMap<>();
     private DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private String picture;
 
     private Stage stage;
-   // private Map<String,User>userMap = new HashMap<>();
-    private Map<Integer,Conservation> conservationMap = new HashMap<>();
-    private ObservableList<Conservation> conservationObservableList = FXCollections.observableList(new ArrayList<>());
-    Image microphoneActiveImage = new Image(getClass().getClassLoader().getResource("images/microphone-active.png").toString());
-    Image microphoneInactiveImage = new Image(getClass().getClassLoader().getResource("images/microphone.png").toString());
+    // private Map<String,User>userMap = new HashMap<>();
+    private Map<Integer, Conservation> conservationMap = new HashMap<>();
+    private ObservableList<Conservation> conservationObservableList =
+        FXCollections.observableList(new ArrayList<>());
+    Image microphoneActiveImage = new Image(getClass()
+        .getClassLoader().getResource("images/microphone-active.png").toString());
+    Image microphoneInactiveImage = new Image(getClass()
+        .getClassLoader().getResource("images/microphone.png").toString());
 
     private double xOffset;
     private double yOffset;
@@ -160,7 +183,7 @@ public class ChatController implements Initializable {
          */
         @Override
         public void keyReleased(java.awt.event.KeyEvent e) {
-            if(e.getKeyCode()==keyEvent.getKeyCode()){
+            if (e.getKeyCode() == keyEvent.getKeyCode()) {
                 controlPressed = false;
             }
         }
@@ -180,45 +203,62 @@ public class ChatController implements Initializable {
         if (!messageBox.getText().isEmpty()) {
             Date sendDate = Date.from(Instant.now());
             String sendTime = df.format(Date.from(Instant.now()));
-            String date = sendTime.substring(0,10);
+            String date = sendTime.substring(0, 10);
             String time = sendTime.substring(11);
-            if(currentConservationType==1) {
-                //私聊时按下发送按钮
-                 stmt.execute("insert into message_history (text,date,time,type,fromid,target , belong) "
-                    + "values ('"+ messageBox.getText()+"','"+date+"','"+time+"',1,'"
-                     +currentUserID+"','"+targetID+"','"+currentConservationID+"')");
-                ResultSet resultSet = stmt.executeQuery("select id,date,time from message_history"
-                    + " where (date = '"+date+"' and time='"+time+"' and fromid = '"+currentUserID+"' and target = "+targetID+" and type =1)") ;
+            if (currentConservationType == 1) {
+
+                stmt.execute("insert into message_history "
+                    + "(text,date,time,type,fromid,target , belong) "
+                    + "values ('" + messageBox.getText() + "','" + date + "','" + time + "',1,'"
+                    + currentUserID + "','" + targetID + "','" + currentConservationID + "')");
+                ResultSet r = stmt.executeQuery("select id,date,time from message_history"
+                    + " where (date = '" + date + "' and time='" + time + "' and fromid = '"
+                    + currentUserID
+                    + "' and target = " + targetID + " and type =1 )");
                 //将发送的信息先传到数据库，再从数据库获取该条信息的id
-                if (resultSet.next()) {
-                    int currentMessageID = resultSet.getInt("id");
-                    Listener.send(msg, String.valueOf(targetID),currentMessageID, 1, currentConservationID ,sendDate,MessageType.USER,null);
+                if (r.next()) {
+                    int currentMessageID = r.getInt("id");
+                    Listener.send(msg, String.valueOf(targetID), currentMessageID, 1,
+                        currentConservationID, sendDate, MessageType.USER, null);
                     messageBox.clear();
                     //send
                     //update conservation in DB
-                    stmt.execute("update conservation set contain_messages = concat(contain_messages,',"+currentMessageID +"') where id = '"+currentConservationID+"'");
-                    stmt.execute("update conservation set last_talk_date = current_date where id ='"+currentConservationID+"'");
-                    stmt.execute("update conservation set last_talk_time = current_time where id ='"+currentConservationID+"'");
+                    stmt.execute("update conservation set contain_messages ="
+                        + " concat(contain_messages,'," + currentMessageID + "')"
+                        + " where id = '" + currentConservationID + "'");
+                    stmt.execute("update conservation set last_talk_date = "
+                        + "current_date where id ='" + currentConservationID + "'");
+                    stmt.execute("update conservation set last_talk_time = "
+                        + "current_time where id ='" + currentConservationID + "'");
                 } else {
                     System.out.println("database ERROR!");
                 }
             }else {
                 //type =2 对应群聊时发送
-                stmt.execute("insert into message_history (text,date,time,type,fromid,target , belong) "
-                    + "values ('"+ messageBox.getText()+"','"+date+"','"+time+"',2,'"
-                    +currentUserID+"','"+currentConservationID+"','"+currentConservationID+"')");
-                ResultSet resultSet = stmt.executeQuery("select id,date,time from message_history"
-                    + " where (date = '"+date+"' and time='"+time+"' and fromid = '"+currentUserID+"' and belong = "+currentConservationID+" and type =2)") ;
+                stmt.execute("insert into message_history "
+                    + "(text,date,time,type,fromid,target , belong) "
+                    + "values ('" + messageBox.getText() + "','" + date + "','" + time + "',2,'"
+                    + currentUserID + "','" + currentConservationID + "','"
+                    + currentConservationID + "')");
+                ResultSet resultSet = stmt.executeQuery(
+                    "select id,date,time from message_history"
+                    + " where (date = '" + date + "' and time = '" + time + "' and fromid = '"
+                    + currentUserID + "' and belong = "+ currentConservationID + " and type = 2)");
                 if(resultSet.next()){
                     int currentMessageID = resultSet.getInt("id");
-                    Listener.send(msg,String.valueOf(currentConservationID),currentMessageID,2,currentConservationID,sendDate,MessageType.USER,null);
+                    Listener.send(msg, String.valueOf(currentConservationID), currentMessageID, 2,
+                        currentConservationID, sendDate, MessageType.USER, null);
                     messageBox.clear();
-                    stmt.execute("update conservation set contain_messages = concat(contain_messages,',"+currentMessageID +"') where id = '"+currentConservationID+"'");
-                    stmt.execute("update conservation set last_talk_date = current_date where id ='"+currentConservationID+"'");
-                    stmt.execute("update conservation set last_talk_time = current_time where id ='"+currentConservationID+"'");
+                    stmt.execute("update conservation set contain_messages = "
+                        + "concat(contain_messages,'," + currentMessageID + "') "
+                        + "where id = '" + currentConservationID + "'");
+                    stmt.execute("update conservation set last_talk_date = "
+                        + "current_date "
+                        + "where id ='" + currentConservationID + "'");
+                    stmt.execute("update conservation set last_talk_time = "
+                        + "current_time where id ='" + currentConservationID + "'");
                 }
             }
-            //messageBox.setScrollTop(0);
         }
     }
 
@@ -253,7 +293,7 @@ public class ChatController implements Initializable {
         }
     }
 
-    public synchronized void addToChat(Message msg,boolean isNew) throws InterruptedException {
+    public synchronized void addToChat(Message msg, boolean isNew) throws InterruptedException {
 
         Task<HBox> othersMessages = new Task<HBox>() {
             @Override
@@ -281,11 +321,11 @@ public class ChatController implements Initializable {
                 HBox x = new HBox();
                 bl.setBubbleSpec(BubbleSpec.FACE_LEFT_CENTER);
                 x.getChildren().addAll(profileImage, bl);
-                //logger.debug("ONLINE USERS: " + Integer.toString(msg.getUserlist().size()));
+
                 setOnlineLabel(Integer.toString(msg.getOnlineCount()));
 
                 threadFinished = true;
-                System.out.println("other m finished");
+
                 return x;
             }
         };
@@ -319,7 +359,7 @@ public class ChatController implements Initializable {
 
                 setOnlineLabel(Integer.toString(msg.getOnlineCount()));
                 threadFinished = true;
-                System.out.println("your m finished");
+
                 return x;
 
             }
@@ -327,30 +367,37 @@ public class ChatController implements Initializable {
         yourMessages.setOnSucceeded(event -> chatPage.getItems().add(yourMessages.getValue()));
 
             if (msg.getName().equals(usernameLabel.getText())) {
-                if (isNew) currentMessages.add(msg);
+                if (isNew) {
+                    currentMessages.add(msg);
+                }
                 Thread t2 = new Thread(yourMessages);
                 t2.setDaemon(true);
-                while (!threadFinished){
+                while (!threadFinished) {
                     wait(1);
                 }
                 threadFinished = false;
                 t2.start();
-                System.out.println("t2 start");
 
-            } else if((msg.getName().equals(String.valueOf(targetID))&&currentConservationType==1)||
-                (msg.getConversationType()==2&&msg.getConversationID()==currentConservationID&&currentConservationType==2) ){
-                if (isNew) currentMessages.add(msg);
+
+            } else if (
+                (msg.getName().equals(String.valueOf(targetID)) && currentConservationType == 1) ||
+                    (msg.getConversationType() == 2
+                        && msg.getConversationID() == currentConservationID
+                        && currentConservationType == 2)) {
+                if (isNew) {
+                    currentMessages.add(msg);
+                }
                 Thread t1 = new Thread(othersMessages);
                 t1.setDaemon(true);
-                while (!threadFinished){
+                while (!threadFinished) {
                     wait(1);
                 }
                 threadFinished = false;
                 t1.start();
-                System.out.println("t1 start");
-            }else  {
+
+            } else {
                 //有新消息但是不是当前对话的新消息，弹出提醒
-                if(isNew){
+                if (isNew) {
                     newMessageNotification(msg);
                 }
             }
@@ -420,7 +467,9 @@ public class ChatController implements Initializable {
 
             leftPane.getSelectionModel().select(recentMessageTab);
 
-            Image profileImg = new Image(getClass().getClassLoader().getResource("images/" + msg.getPicture().toLowerCase() +".png").toString(),50,50,false,false);
+            Image profileImg = new Image(getClass().getClassLoader().getResource(
+                "images/" + msg.getPicture().toLowerCase() +".png").toString(), 50,
+                50, false, false);
             TrayNotification tray = new TrayNotification();
             tray.setTitle("New Message");
             tray.setMessage("you have a new message from "+msg.getName());
@@ -443,7 +492,9 @@ public class ChatController implements Initializable {
     /* Displays Notification when a user joins */
     public void newUserNotification(Message msg) {
         Platform.runLater(() -> {
-            Image profileImg = new Image(getClass().getClassLoader().getResource("images/" + msg.getPicture().toLowerCase() +".png").toString(),50,50,false,false);
+            Image profileImg = new Image(getClass().getClassLoader().getResource("images/"
+                + msg.getPicture().toLowerCase() +".png").toString(), 50,
+                50, false, false);
             TrayNotification tray = new TrayNotification();
             tray.setTitle("A new user has joined!");
             tray.setMessage(msg.getName() + " has joined the JavaFX Chatroom!");
@@ -458,12 +509,13 @@ public class ChatController implements Initializable {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         });
     }
     public void shutdownNotification() {
         Platform.runLater(() -> {
-            Image profileImg = new Image(getClass().getClassLoader().getResource("images/sustech.png").toString(),50,50,false,false);
+            Image profileImg = new Image(getClass().getClassLoader().getResource(
+                "images/sustech.png").toString(), 50, 50,
+                false, false);
             TrayNotification tray = new TrayNotification();
             tray.setTitle("Disconnected to the sever!");
             tray.setMessage("The server shutdown, please try later");
@@ -485,21 +537,6 @@ public class ChatController implements Initializable {
         if (event.getCode()==KeyCode.CONTROL) controlPressed=false;
             }
     public void sendMethod(KeyEvent event) throws IOException {
-//        if (event.getCode()==KeyCode.CONTROL) controlPressed=true;
-//
-//       if(!controlPressed&&event.getCode() == KeyCode.ENTER) {
-//           sendButtonAction();
-//       }
-//     messageBox.addEventFilter(KeyEvent.KEY_PRESSED,key->{
-//         if(!key.getCode().equals(KeyCode.CONTROL)&&event.getCode() == KeyCode.ENTER){
-//                 try {
-//                     sendButtonAction();
-//                 } catch (IOException e) {
-//                     throw new RuntimeException(e);
-//                 }
-//             }
-//     });
-
     }
 
     @FXML
@@ -585,7 +622,8 @@ public class ChatController implements Initializable {
                     sendButtonAction();
                 } catch (SocketException e){
                     e.printStackTrace();
-                    showInternetErrorDialog("Connect Failed!","Internet Error!","There is something wrong with the Internet connection.\n"
+                    showInternetErrorDialog("Connect Failed!", "Internet Error!",
+                        "There is something wrong with the Internet connection.\n"
                         + " Please check the Internet and try again later.");
                 } catch (IOException | SQLException e) {
                     e.printStackTrace();
@@ -595,10 +633,10 @@ public class ChatController implements Initializable {
                 messageBox.appendText("\n");
             }
         });
-        MainLauncher.controllers.put(this.getClass().getSimpleName(),this);
+        MainLauncher.controllers.put(this.getClass().getSimpleName(), this);
     }
 
-    public void showInternetErrorDialog(String title,String message,String content) {
+    public void showInternetErrorDialog(String title, String message, String content) {
         Platform.runLater(()-> {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle(title);
@@ -629,7 +667,7 @@ public class ChatController implements Initializable {
             Parent window = null;
             try {
                 window = (Pane) fxmlLoader.load();
-               // Listener.send("");
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -646,7 +684,8 @@ public class ChatController implements Initializable {
 
     public void addToRecentConservation(Message message){
         logger.info("addToRecentConservation() method Enter");
-        Platform.runLater(() -> {//在recent message新建一个最近聊天
+        Platform.runLater(() -> {
+            //在recent message新建一个最近聊天
             Conservation conservation =new Conservation();
             conservation.setID(message.getConversationID());
             conservation.setLastTalk(message.getSendDate());
@@ -670,11 +709,6 @@ public class ChatController implements Initializable {
 
             //再把该对话加入到本地缓存(map)
             conservationMap.put(conservation.getID(),conservation);
-
-//            ObservableList<User> users = FXCollections.observableList(message.getUsers());
-//            userList.setItems(users);
-//            userList.setCellFactory(new CellRenderer());
-//            setOnlineLabel(String.valueOf(message.getUserlist().size()));
         });
         logger.info("addToRecentConservation() method Exit");
     }
@@ -779,7 +813,8 @@ public class ChatController implements Initializable {
                             + usernameLabel.getText() + "%' "
                             + "and contain_users like '%" + targetID + "%' and type=1 ");
                     messageListMap.put(currentConservationID,
-                        currentMessages);//把当前的chatPage里的聊天记录存起来
+                        currentMessages);
+                    //把当前的chatPage里的聊天记录存起来
 
                     if (resultSet.next()) {
                         currentConservationID = resultSet.getInt("id");
@@ -836,17 +871,6 @@ public class ChatController implements Initializable {
                         currentMessages.clear();
                         chatPage.getItems().clear();
                     }
-                    //从本地获取聊天记录
-//                        messageListMap.put(currentConservationID,currentMessages);
-//                        currentConservationID = r1.getInt("id");
-//                        currentMessages= messageListMap.get(currentConservationID);//聊天记录传过来
-//                        chatPage.getItems().clear();
-//                        if(currentMessages==null) {currentMessages = new ArrayList<Message>();}//恢复保存的聊天记录
-//                        for (Message message : currentMessages) {
-//                            addToChat(message, false);
-//                        }
-                    //then,
-                    // currentMessages.forEach(message -> addToChat(message,false));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -909,8 +933,6 @@ public class ChatController implements Initializable {
             conservationObservableList.addAll(conservationArrayList);
             messageList.setItems(conservationObservableList);
             messageList.setCellFactory(new MessageRenderer());
-//            System.out.println(recentMessageTab);
-//            System.out.println(onlineUserTab);
         }
 
     }
@@ -1130,16 +1152,6 @@ public class ChatController implements Initializable {
                         }
                     }
 
-//                OutputStream os = Files.newOutputStream(tempFile.toPath());
-//                byte[] buffer = new byte[1024];
-//                int length;
-//                while ((length = is.read(buffer))!=-1){
-//                    os.write(buffer,0,length);
-//                }
-
-
-                 //   Files.copy(Paths.get(file.getAbsolutePath()),Paths.get(dest.getAbsolutePath()+"\\"+name));
-
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -1158,20 +1170,13 @@ public class ChatController implements Initializable {
         }
         return out.toString();
     }
-
     public static byte[] toByteArray(InputStream in) throws IOException {
-        ByteArrayOutputStream out=new ByteArrayOutputStream();
-        byte[] buffer=new byte[1024];
-        int n=0;
-        while ( (n=in.read(buffer)) !=-1) {
-            out.write(buffer,0,n);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int n = 0;
+        while ((n = in.read(buffer)) != -1) {
+            out.write(buffer, 0, n);
         }
         return out.toByteArray();
     }
-
-     public static InputStream toInputStream(byte[] b) throws IOException {
-           return   new ByteArrayInputStream(b);
-
-    }
-
-    }
+}

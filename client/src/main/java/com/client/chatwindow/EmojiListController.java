@@ -1,8 +1,10 @@
 package com.client.chatwindow;
-import com.client.emoji.EmojiOne;
+
 import com.client.emoji.Emoji;
+import com.client.emoji.EmojiOne;
 import com.client.login.MainLauncher;
-import javafx.animation.Interpolator;
+import java.util.List;
+import java.util.Map;
 import javafx.animation.ScaleTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -10,16 +12,20 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
-
-import java.util.List;
-import java.util.Map;
 
 
 

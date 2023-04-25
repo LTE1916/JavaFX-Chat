@@ -5,36 +5,35 @@ import com.messages.Message;
 import com.messages.MessageType;
 import com.messages.Status;
 import com.messages.User;
-import com.sun.xml.internal.ws.api.model.MEP;
+import java.io.DataInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Server {
 
     /* Setting up variables */
     private static final int PORT = 9001;
     private static final HashMap<String, User> names = new HashMap<>();
-    private static Hashtable<String,ObjectOutputStream> writers = new Hashtable<>();
-   // private static Set<ObjectOutputStream> writers = Collections.synchronizedSet(new HashSet<>());
+    private static Hashtable<String, ObjectOutputStream> writers = new Hashtable<>();
+
     private static ArrayList<User> users = new ArrayList<>();
     static Logger logger = LoggerFactory.getLogger(Server.class);
 
@@ -70,8 +69,9 @@ public class Server {
         private InputStream is;
         private DataInputStream dis;
         private FileOutputStream fos;
-        private final Connection connection = DriverManager.getConnection
-            ("jdbc:postgresql://localhost:5432/java_chat_user","test","123456789");
+        private final Connection connection = DriverManager.getConnection(
+            "jdbc:postgresql://localhost:5432/java_chat_user",
+            "test" ,"123456789");
         //connect to DATA BASE
         private Statement stmt = connection.createStatement();
 
@@ -90,7 +90,7 @@ public class Server {
                 dis = new DataInputStream(is);
 
                 Message firstMessage = (Message) input.readObject();
-                if(checkDuplicateUsername(firstMessage)) {//异地登陆挤下线
+                if (checkDuplicateUsername(firstMessage)) {//异地登陆挤下线
                     Message logoutMessage = new Message();
                     logoutMessage.setName(firstMessage.getName());
                     logoutMessage.setStatus(Status.LOGOUT);
@@ -109,16 +109,12 @@ public class Server {
                     user.setPicture(firstMessage.getPicture());
                     users.add(user);
                     names.put(name, user);
-                    writers.put(firstMessage.getName(),output);
+                    writers.put(firstMessage.getName(), output);
                     logger.info(name + " has been added to the list");
-
             //    writers.add(output);
-
                 sendNewUserNotification(firstMessage);
                 addToList();
-
                 while (socket.isConnected()) {
-
                         Message inputmsg = (Message) input.readObject();
                         //waiting the client message
                         if (inputmsg != null) {
@@ -147,8 +143,6 @@ public class Server {
                                     closeConnections();
                                     socket.close();
                                     break;
-
-
                             }
                         }
                     }
@@ -241,7 +235,7 @@ public class Server {
             message.setOnlineCount(names.size());
             sender.writeObject(message);
             sender.reset();
-            if(target!=null) {
+            if (target != null) {
                 target.writeObject(message);
                 target.reset();
             }
@@ -255,14 +249,15 @@ public class Server {
             msg.setOnlineCount(names.size());
             sender.writeObject(msg);
             sender.reset();
-            ResultSet resultSet = stmt.executeQuery("select contain_users from conservation where id = '"+msg.getConversationID()+"' ");
-            if(resultSet.next()){
+            ResultSet resultSet = stmt.executeQuery("select contain_users from conservation "
+                + "where id = '" + msg.getConversationID() + "' ");
+            if (resultSet.next()) {
                 String containUsers = resultSet.getString("contain_users");
                 String []users = containUsers.split(",");
                 for (int i = 0; i <users.length ; i++) {
-                    if(!users[i].equals(msg.getName())){
+                    if (!users[i].equals(msg.getName())) {
                         ObjectOutputStream receiver = writers.get(users[i]);
-                        if(receiver!=null){
+                        if(receiver != null){
                             receiver.writeObject(msg);
                             receiver.reset();
                         }
@@ -284,25 +279,6 @@ public class Server {
                 writer.writeObject(msg);
                 writer.reset();
             }
-
-
-//            for (int i = 0; i < writers.size(); i++) {
-//
-//                ObjectOutputStream writer = writers.get(msg.getName());
-//                msg.setUserlist(names);
-//                msg.setUsers(users);
-//                msg.setOnlineCount(names.size());
-//                writer.writeObject(msg);
-//                writer.reset();
-//            }
-
-//            for (ObjectOutputStream writer : writers) {
-//                msg.setUserlist(names);
-//                msg.setUsers(users);
-//                msg.setOnlineCount(names.size());
-//                writer.writeObject(msg);
-//                writer.reset();
-//            }
         }
 
         /*
@@ -310,7 +286,8 @@ public class Server {
          */
         private synchronized void closeConnections()  {
             logger.debug("closeConnections() method Enter");
-            logger.info("HashMap names:" + names.size() + " writers:" + writers.size() + " usersList size:" + users.size());
+            logger.info("HashMap names:" + names.size() + " writers:" + writers.size()
+                + " usersList size:" + users.size());
             if (name != null) {
                 names.remove(name);
                 logger.info("User: " + name + " has been removed!");
@@ -330,14 +307,14 @@ public class Server {
                     e.printStackTrace();
                 }
             }
-            if (os != null){
+            if (os != null) {
                 try {
                     os.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
-            if (input != null){
+            if (input != null) {
                 try {
                     input.close();
                 } catch (IOException e) {
@@ -349,7 +326,8 @@ public class Server {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            logger.info("HashMap names:" + names.size() + " writers:" + writers.size() + " usersList size:" + users.size());
+            logger.info("HashMap names:" + names.size() + " writers:" + writers.size()
+                + " usersList size:" + users.size());
             logger.debug("closeConnections() method Exit");
         }
     }
