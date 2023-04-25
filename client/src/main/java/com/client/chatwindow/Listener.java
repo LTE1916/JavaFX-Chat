@@ -5,7 +5,9 @@ import com.messages.Message;
 import com.messages.MessageType;
 import com.messages.Status;
 import java.net.SocketException;
+import java.nio.file.Files;
 import java.util.Date;
+import javafx.stage.FileChooser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +30,12 @@ public class Listener implements Runnable{
     private InputStream is;
     private ObjectInputStream input;
     private OutputStream outputStream;
+
+    private static FileInputStream fis;
+
+    private static DataOutputStream dos;
+    private DataInputStream dis;
+    private FileOutputStream fos;
     Logger logger = LoggerFactory.getLogger(Listener.class);
 
     public Listener(String hostname, int port, String username, String picture, ChatController controller) {
@@ -46,6 +54,9 @@ public class Listener implements Runnable{
             oos = new ObjectOutputStream(outputStream);
             is = socket.getInputStream();
             input = new ObjectInputStream(is);
+
+
+
         } catch (IOException e) {
             LoginController.getInstance().showErrorDialog("Could not connect to server",
                 "\"Please check for firewall issues and check if the server is running.");
@@ -66,6 +77,14 @@ public class Listener implements Runnable{
                             controller.addToChat(message,true);
                             break;
                         case VOICE:
+                            controller.addToChat(message,true);
+                            break;
+                        case File:
+                            String msg = message.getMsg();
+
+                            controller.saveFile(msg,message.getID());
+
+                            message.setMsg("send a File ");
                             controller.addToChat(message,true);
                             break;
                         case NOTIFICATION:
@@ -112,10 +131,10 @@ public class Listener implements Runnable{
     /* This method is used for sending a normal Message
      * @param msg - The message which the user generates
      */
-    public static void send(String msg,String targetID,int messageID,int conservationType, int conservationID , Date date) throws IOException {
+    public static void send(String msg,String targetID,int messageID,int conservationType, int conservationID , Date date , MessageType messageType) throws IOException {
         Message newMessage = new Message();
         newMessage.setName(username);
-        newMessage.setType(MessageType.USER);//意思是来自用户发送的文字消息
+        newMessage.setType(messageType);//意思是来自用户发送的文字消息或者文件
        // newMessage.setStatus(Status.AWAY);
         newMessage.setMsg(msg);
         newMessage.setPicture(picture);
@@ -145,6 +164,31 @@ public class Listener implements Runnable{
     /* This method is used for sending a normal Message
  * @param msg - The message which the user generates
  */
+
+//    public static void sendFile(File file) throws IOException {
+//        try {
+//            fis = new FileInputStream(file);
+//            //client.getOutputStream()返回此Socket的输出流
+////            dos.writeUTF(file.getName());
+////            dos.flush();
+////            dos.writeLong(file.length());
+////            dos.flush();.
+//         //   System.out.println("开始传输文件-----");
+//            byte[] bytes = new byte[1024];
+//            int length = 0;
+//
+//            while ((length = fis.read(bytes, 0, bytes.length)) != -1) {
+//                dos.write(bytes, 0, length);
+//                dos.flush();
+//            }
+//         //   System.out.println("文件传输成功-----");
+//        }catch(IOException e) {
+//            e.printStackTrace();
+//            // System.out.println("文件传输异常");
+//            // 传输完关闭流
+//        }
+//    }
+
     public static void sendStatusUpdate(Status status) throws IOException {
         Message message = new Message();
         message.setName(username);

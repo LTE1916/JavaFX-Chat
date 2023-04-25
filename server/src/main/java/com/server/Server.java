@@ -68,6 +68,8 @@ public class Server {
         private OutputStream os;
         private ObjectOutputStream output;
         private InputStream is;
+        private DataInputStream dis;
+        private FileOutputStream fos;
         private final Connection connection = DriverManager.getConnection
             ("jdbc:postgresql://localhost:5432/java_chat_user","test","123456789");
         //connect to DATA BASE
@@ -85,6 +87,8 @@ public class Server {
                 input = new ObjectInputStream(is);
                 os = socket.getOutputStream();
                 output = new ObjectOutputStream(os);
+                dis = new DataInputStream(is);
+
                 Message firstMessage = (Message) input.readObject();
                 if(checkDuplicateUsername(firstMessage)) {//异地登陆挤下线
                     Message logoutMessage = new Message();
@@ -95,11 +99,7 @@ public class Server {
                     writer.writeObject(logoutMessage);
                     Thread.sleep(100);
                     writer = output;
-//                    is = socket.getInputStream();
-//                    input = new ObjectInputStream(is);
-//                    os = socket.getOutputStream();
-//                    output = new ObjectOutputStream(os);
-//                    firstMessage = (Message) input.readObject();
+
                 }
                 //新用户上线
                     this.name = firstMessage.getName();
@@ -118,34 +118,41 @@ public class Server {
                 addToList();
 
                 while (socket.isConnected()) {
-                    Message inputmsg = (Message) input.readObject();
-                    //waiting the client message
-                    if (inputmsg != null) {
-                        logger.info(inputmsg.getType() + " - " + inputmsg.getName() + ": " + inputmsg.getMsg());
-                        switch (inputmsg.getType()) {
-                            case USER:
-                                if(inputmsg.getConversationType()==1){
-                               writeSingleConversation(inputmsg);
-                                }else {
-                                    writeGroup(inputmsg);
-                                }
-                                break;
-                            case VOICE:
-                                write(inputmsg);
-                                break;
-                            case CONNECTED:
-                                addToList();
-                                break;
-                            case STATUS:
-                                changeStatus(inputmsg);
-                                break;
-                            case DISCONNECTED:
-                                closeConnections();
-                                socket.close();
-                                break;
+
+                        Message inputmsg = (Message) input.readObject();
+                        //waiting the client message
+                        if (inputmsg != null) {
+                            logger.info(inputmsg.getType() + " - " + inputmsg.getName() + ": "
+                                + inputmsg.getMsg());
+                            switch (inputmsg.getType()) {
+                                case USER:
+                                case File:
+                                    if (inputmsg.getConversationType() == 1) {
+                                        writeSingleConversation(inputmsg);
+                                    } else {
+                                        writeGroup(inputmsg);
+                                    }
+                                    break;
+
+                                case VOICE:
+                                    write(inputmsg);
+                                    break;
+                                case CONNECTED:
+                                    addToList();
+                                    break;
+                                case STATUS:
+                                    changeStatus(inputmsg);
+                                    break;
+                                case DISCONNECTED:
+                                    closeConnections();
+                                    socket.close();
+                                    break;
+
+
+                            }
                         }
                     }
-                }
+
             } catch (SocketException socketException) {
                 logger.error("Socket Exception for user " + name);
 

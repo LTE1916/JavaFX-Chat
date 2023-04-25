@@ -15,7 +15,21 @@ import com.messages.bubble.BubbledLabel;
 import com.traynotifications.animations.AnimationType;
 import com.traynotifications.notification.TrayNotification;
 import java.awt.event.KeyListener;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -32,6 +46,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -58,6 +73,8 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.slf4j.Logger;
@@ -66,6 +83,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import sun.nio.cs.UTF_32;
 
 
 public class ChatController implements Initializable {
@@ -109,6 +127,8 @@ public class ChatController implements Initializable {
     private Map<Integer,String> conversationTypeMap = new HashMap<>();
     private DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private String picture;
+
+    private Stage stage;
    // private Map<String,User>userMap = new HashMap<>();
     private Map<Integer,Conservation> conservationMap = new HashMap<>();
     private ObservableList<Conservation> conservationObservableList = FXCollections.observableList(new ArrayList<>());
@@ -154,6 +174,7 @@ public class ChatController implements Initializable {
     public void sendButtonAction() throws IOException, SQLException {
         String msg = messageBox.getText();
          currentUserID = Integer.parseInt(usernameLabel.getText());
+
         if (!messageBox.getText().isEmpty()) {
             Date sendDate = Date.from(Instant.now());
             String sendTime = df.format(Date.from(Instant.now()));
@@ -169,7 +190,7 @@ public class ChatController implements Initializable {
                 //将发送的信息先传到数据库，再从数据库获取该条信息的id
                 if (resultSet.next()) {
                     int currentMessageID = resultSet.getInt("id");
-                    Listener.send(msg, String.valueOf(targetID),currentMessageID, 1, currentConservationID ,sendDate);
+                    Listener.send(msg, String.valueOf(targetID),currentMessageID, 1, currentConservationID ,sendDate,MessageType.USER);
                     messageBox.clear();
                     //send
                     //update conservation in DB
@@ -188,7 +209,7 @@ public class ChatController implements Initializable {
                     + " where (date = '"+date+"' and time='"+time+"' and fromid = '"+currentUserID+"' and belong = "+currentConservationID+" and type =2)") ;
                 if(resultSet.next()){
                     int currentMessageID = resultSet.getInt("id");
-                    Listener.send(msg,String.valueOf(currentConservationID),currentMessageID,2,currentConservationID,sendDate);
+                    Listener.send(msg,String.valueOf(currentConservationID),currentMessageID,2,currentConservationID,sendDate,MessageType.USER);
                     messageBox.clear();
                     stmt.execute("update conservation set contain_messages = concat(contain_messages,',"+currentMessageID +"') where id = '"+currentConservationID+"'");
                     stmt.execute("update conservation set last_talk_date = current_date where id ='"+currentConservationID+"'");
@@ -600,7 +621,7 @@ public class ChatController implements Initializable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            Stage stage = MainLauncher.getPrimaryStage();
+            stage = MainLauncher.getPrimaryStage();
             Scene scene = new Scene(window);
             stage.setMaxWidth(1024);
             stage.setMaxHeight(620);
@@ -992,5 +1013,163 @@ public class ChatController implements Initializable {
         Optional<ButtonType> result = dialog.showAndWait();
     }
 
+    public void sendFile() throws IOException, SQLException {
+        String target="";
+        ResultSet resultSet = stmt.executeQuery("select * from  conservation where id = '"+currentConservationID+"'");
+        if(resultSet.next()){
+            if(currentConservationType == 1){
+                String contain = resultSet.getString("contain_users");
+                String[]tmp = contain.split(",");
+                if(tmp[0].equals(usernameLabel.getText())){
+                    target = tmp[1];
+                }else {
+                    target = tmp[0];
+                }
+            }else {
+                target = String.valueOf(currentConservationID);
+            }
+            targetID = resultSet.getInt("type");
+        }
+        FileChooser fileChooser = new FileChooser();
+        File file = fileChooser.showOpenDialog(stage);
+        if(file!=null) {
+            String name = file.getName();
+            //FileInputStream fis = new FileInputStream(file);
+            InputStream is = new FileInputStream(file);
+            byte[]b = toByteArray(is);
+
+            String msg = new String(b,StandardCharsets.UTF_8);
+            InputStream inputStream = toInputStream(msg.getBytes());
+            //test
+            String string = "C:\\Users\\1\\Desktop\\Chen Erd.jpg";
+            FileOutputStream fos = new FileOutputStream(new File(string));
+            int read;
+            byte[]bytes = new byte[1024];
+            while((read = inputStream.read(bytes))!=-1){
+                fos.write(bytes,0,read);
+            }
+            //
+
+
+
+            Date sendDate = Date.from(Instant.now());
+            String sendTime = df.format(sendDate);
+            String date = sendTime.substring(0, 10);
+            String time = sendTime.substring(11);
+            if (currentConservationType == 1) {
+                //私聊时按下发送按钮
+                stmt.execute(
+                    "insert into message_history (text,date,time,type,fromid,target , belong) "
+                        + "values ('" + name + "','" + date + "','" + time + "',1,'"
+                        + currentUserID + "','" + targetID + "','" + currentConservationID + "')");
+                ResultSet r = stmt.executeQuery("select id,date,time from message_history"
+                    + " where (date = '" + date + "' and time='" + time + "' and fromid = '"
+                    + currentUserID + "' and target = " + targetID + " and type =1)");
+                //将发送的信息先传到数据库，再从数据库获取该条信息的id
+                if (r.next()) {
+                    int currentMessageID = r.getInt("id");
+                    Listener.send(msg, target, currentMessageID, currentConservationType,
+                        currentConservationID, sendDate, MessageType.File);
+                    //update conservation in DB
+                    stmt.execute(
+                        "update conservation set contain_messages = concat(contain_messages,',"
+                            + currentMessageID + "') where id = '" + currentConservationID + "'");
+                    stmt.execute("update conservation set last_talk_date = current_date where id ='"
+                        + currentConservationID + "'");
+                    stmt.execute("update conservation set last_talk_time = current_time where id ='"
+                        + currentConservationID + "'");
+                } else {
+                    System.out.println("database ERROR!");
+                }
+            } else {
+                //type =2 对应群聊时发送
+                stmt.execute(
+                    "insert into message_history (text,date,time,type,fromid,target , belong) "
+                        + "values ('" + name + "','" + date + "','" + time + "',2,'"
+                        + currentUserID + "','" + currentConservationID + "','"
+                        + currentConservationID + "')");
+                ResultSet r = stmt.executeQuery("select id,date,time from message_history"
+                    + " where (date = '" + date + "' and time='" + time + "' and fromid = '"
+                    + currentUserID + "' and belong = " + currentConservationID + " and type =2)");
+                if (r.next()) {
+                    int currentMessageID = r.getInt("id");
+                    Listener.send(msg, target, currentMessageID, currentConservationType,
+                        currentConservationID, sendDate, MessageType.File);
+                    stmt.execute(
+                        "update conservation set contain_messages = concat(contain_messages,',"
+                            + currentMessageID + "') where id = '" + currentConservationID + "'");
+                    stmt.execute("update conservation set last_talk_date = current_date where id ='"
+                        + currentConservationID + "'");
+                    stmt.execute("update conservation set last_talk_time = current_time where id ='"
+                        + currentConservationID + "'");
+                }
+            }
+        }
+       // Listener.sendFile(file);
+    }
+    public void saveFile(String msg,int id){
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                String name = "";
+                try {
+                    ResultSet r = stmt.executeQuery("select text from message_history where id ='"+id+"'");
+                    if(r.next()){
+                        name = r.getString("text");
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    DirectoryChooser directoryChooser = new DirectoryChooser();
+                    File dest = directoryChooser.showDialog(stage);
+                    if(dest!=null) {
+                        String string = dest.getAbsolutePath() + "\\" + name;
+                        File tempFile = File.createTempFile("temp", ".jpg");
+                        InputStream is = new ByteArrayInputStream(msg.getBytes());
+                        //is转成file
+
+                        File file = new File(string);
+                        //  file.createNewFile();
+                        FileOutputStream fos = new FileOutputStream(new File(string));
+                        int read;
+                        byte[] bytes = new byte[1024 * 4];
+                        while ((read = is.read(bytes)) != -1) {
+                            fos.write(bytes, 0, read);
+                        }
+                    }
+
+//                OutputStream os = Files.newOutputStream(tempFile.toPath());
+//                byte[] buffer = new byte[1024];
+//                int length;
+//                while ((length = is.read(buffer))!=-1){
+//                    os.write(buffer,0,length);
+//                }
+
+
+                 //   Files.copy(Paths.get(file.getAbsolutePath()),Paths.get(dest.getAbsolutePath()+"\\"+name));
+
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        });
+
+    }
+    public static byte[] toByteArray(InputStream in) throws IOException {
+        ByteArrayOutputStream out=new ByteArrayOutputStream();
+        byte[] buffer=new byte[1024];
+        int n=0;
+        while ( (n=in.read(buffer)) !=-1) {
+            out.write(buffer,0,n);
+        }
+        return out.toByteArray();
+    }
+
+     public static InputStream toInputStream(byte[] b) throws IOException {
+           return   new ByteArrayInputStream(b);
+
+    }
 
     }

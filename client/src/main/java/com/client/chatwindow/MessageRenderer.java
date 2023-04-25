@@ -5,6 +5,8 @@ import static com.client.login.LoginController.con;
 import com.messages.Conservation;
 import com.messages.Message;
 import com.messages.User;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import javafx.geometry.Pos;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -35,8 +37,10 @@ class MessageRenderer implements Callback<ListView<Conservation>,ListCell<Conser
           }else  {
             name = new Text(conservation.getName());//2人以上群聊
           }
-          ImageView statusImageView = new ImageView();
+          DateFormat df = new SimpleDateFormat("MM-dd HH:mm:ss");
+          Text time = new Text(df.format(conservation.getLastTalk()));
 
+          ImageView statusImageView = new ImageView();
             ImageView picture = new ImageView();
             Image image = new Image(getClass().getClassLoader().getResource("images/"+ conservation.getPicture().toLowerCase()+".png").toString(),50,50,true,true);
             picture.setImage(image);
@@ -47,9 +51,9 @@ class MessageRenderer implements Callback<ListView<Conservation>,ListCell<Conser
                     "images/" + conservation.getStatus().toLowerCase() + ".png")
                 .toString(), 16, 16, true, true);
             statusImageView.setImage(statusImage);
-            hBox.getChildren().addAll(statusImageView,name,picture);
+            hBox.getChildren().addAll(statusImageView,name,picture,time);
           }else {
-              hBox.getChildren().addAll(name,picture);
+              hBox.getChildren().addAll(name,picture,time);
             }
 
             hBox.setAlignment(Pos.CENTER_LEFT);
